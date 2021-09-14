@@ -1,0 +1,45 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f6f6f6 !important;
+}
+
+.content {
+    min-height: calc(100vh - 85px);
+    margin-top: 85px !important;
+}
+
+.form-group > legend, .i-label {
+    color: gray;
+    font-size: 12px;
+    margin: 0 15px;
+    margin-bottom: 2px;
+    padding: 0;
+}
+
+.form-group > div {
+    width: 100%;
+}
+
+.form-control {
+    padding: 8px 15px !important;
+}
+
+.r-left {
+    border: solid 1px lightgray !important;
+    border-right: 0px !important;
+    border-top-left-radius: 10rem !important;
+    border-bottom-left-radius: 10rem !important;
+}
+
+.r-middle {
+    border-top: solid 1px lightgray !important;
+    border-bottom: solid 1px lightgray !important;
+    border-radius: 0px !important;
+}
+
+.r-right {
+    border: solid 1px lightgray !important;
+    border-left: 0px !important;
+    border-top-right-radius: 10rem !important;
+    border-bottom-right-radius: 10rem !important;
+}
