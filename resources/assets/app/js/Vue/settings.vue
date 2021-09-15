@@ -1,6 +1,6 @@
 <template>
-    <div class="d-flex justify-content-center m-2 py-5">
-        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-75">
+    <div class="d-flex justify-content-center px-5">
+        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
             <h3 class="mb-5">Account Settings</h3>
             <b-row>
                 <b-col class="px-3 py-3 text-center" xl>
@@ -12,10 +12,6 @@
                             <span class="mt-1">Email not verified!</span>
                             <b-button class="ml-auto alert-btn" variant="secondary" size="sm" pill>Verify</b-button>
                         </b-alert>
-                        <b-alert class="d-flex" variant="warning" show>
-                            <span class="mt-1">No Paypal Account linked!</span>
-                            <b-button class="ml-auto alert-btn" variant="secondary" size="sm" pill>Link</b-button>
-                        </b-alert>
                     </div>
                 </b-col>
                 <b-col xl>
@@ -26,14 +22,14 @@
                                     <h6 class="font-weight-lighter text-center text-black-70">Profile Information</h6>
                                     <div class="font-weight-lighter mb-3 text-center text-danger w-100" style="font-size: 9px;">* Required Field</div>
                                     <b-form-group label="First Name *">
-                                        <b-form-input class="form-control rounded-pill" v-model="account_info.first_name" @keyup="is_valid('first_name')"></b-form-input>
+                                        <b-form-input class="form-control rounded-pill" v-model="account_info.first_name" :disabled="username == 'superadmin'" @keyup="is_valid('first_name')"></b-form-input>
                                         <span class="text-danger i-label" v-if="valid.first_name">{{ valid.first_name }}</span>
                                     </b-form-group>
-                                    <b-form-group label="Middle Name">
+                                    <b-form-group label="Middle Name" v-if="username != 'superadmin'">
                                         <b-form-input class="form-control rounded-pill" v-model="account_info.middle_name"></b-form-input>
                                     </b-form-group>
                                     <b-form-group label="Last Name *">
-                                        <b-form-input class="form-control rounded-pill" v-model="account_info.last_name" @keyup="is_valid('last_name')"></b-form-input>
+                                        <b-form-input class="form-control rounded-pill" v-model="account_info.last_name" :disabled="username == 'superadmin'" @keyup="is_valid('last_name')"></b-form-input>
                                         <span class="text-danger i-label" v-if="valid.lastname">{{ valid.lastname }}</span>
                                     </b-form-group>
                                     <b-form-group label="Email Address *">
@@ -43,13 +39,17 @@
                                     <b-form-group label="Mobile Number">
                                         <b-form-input class="form-control rounded-pill" v-model="account_info.mobile_number"></b-form-input>
                                     </b-form-group>
+                                    <b-form-group label="Position *">
+                                        <b-form-select class="form-control rounded-pill" v-model="account_info.position" :options="position_options" :disabled="username == 'superadmin'" @change="is_valid('position')"></b-form-select>
+                                        <span class="text-danger i-label" v-if="valid.position">{{ valid.position }}</span>
+                                    </b-form-group>
                                     <b-form-group class="mt-4">
-                                        <b-button variant="primary" @click="update_profile" :disabled="(valid.first_name != '' || valid.last_name != '' || valid.email_address != '') && (account_info.first_name != '' || account_info.last_name != '' || account_info.email_address != '')" block pill>Save Changes</b-button>
+                                        <b-button variant="primary" @click="update_profile" :disabled="(valid.first_name != '' && account_info.first_name == '') || (valid.last_name != '' && account_info.last_name == '') || (valid.email_address != '' && account_info.email_address == '')" block pill>Save Changes</b-button>
                                     </b-form-group>
                                 </b-overlay>
                             </b-tab>
                             <b-tab title="Login Credentials">
-                                <b-overlay class="mx-auto p-4 w-xl-75" :show="lcu_busy" opacity="0.3">
+                                <b-overlay class="mx-auto p-4 w-xl-75" :show="lcu_busy" opacity="0.3" v-if="username != 'superadmin'">
                                     <h6 class="font-weight-lighter text-center text-black-70">Change Username</h6>
                                     <div class="font-weight-lighter mb-3 text-center text-danger w-100" style="font-size: 9px;">* Required Field</div>
                                     <b-form-group label="New Username *">
@@ -65,7 +65,7 @@
                                 </b-overlay>
                                 <div class="mx-2 my-4 separator separator-lightgray"></div>
                                 <b-overlay class="p-4 px-5" :show="lcp_busy" opacity="0.3">
-                                    <h6 class="font-weight-lighter mb-3 text-center text-black-70">Change Username</h6>
+                                    <h6 class="font-weight-lighter mb-3 text-center text-black-70">Change Password</h6>
                                     <b-form-group label="Old Password *">
                                         <b-form-input type="password" class="form-control rounded-pill" v-model="pchange.old_password"></b-form-input>
                                     </b-form-group>
@@ -92,7 +92,7 @@
                 </b-col>
             </b-row>
         </div>
-        <alert :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
+        <alert id="settings_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
     </div>
 </template>
 
@@ -106,6 +106,7 @@ export default {
 
     data() {
         return {
+            username: 'N/A',
             user_fullname: 'N/A',
             user_regdate: 'N/A',
             account_info: {
@@ -113,8 +114,10 @@ export default {
                 middle_name: '',
                 last_name: '',
                 email_address: '',
-                mobile_number: ''
+                mobile_number: '',
+                position: ''
             },
+            position_options: ['Select Position', 'Receptionist', 'Housekeeper', 'Administrator'],
             uchange: {
                 username: '',
                 password: ''
@@ -128,6 +131,7 @@ export default {
                 first_name: '',
                 last_name: '',
                 email_address: '',
+                position: '',
                 username: '',
                 password_length: '',
                 password_cap: '',
@@ -175,6 +179,10 @@ export default {
                     this.valid.email_address = !valid_email ? 'Invalid email address' : ''
                     break
 
+                case 'position':
+                    this.valid.position = this.account_info.position == 'Select Position' ? 'Field is required' : ''
+                    break
+
                 case 'username':
                     var valid_username = regex_unamelength.test(this.uchange.username)
                     this.valid.username = !valid_username ? 'Userame too short (At least 6 characters)' : ''
@@ -203,7 +211,7 @@ export default {
             this.is_valid('email_address')
 
             if(!this.valid.email_address) {
-                this.valid.email_address = await axios.get('/api/accounts/checkEmail?email_address=' + this.account_info.email_address)
+                this.valid.email_address = await axios.get('/api/accounts/checkEmail?email_address=' + this.account_info.email_address + '&user_role=employee&self=1')
                     .then((resp) => {
                         return resp.data ? 'Email already taken' : null
                     }).catch((err) => {
@@ -235,7 +243,14 @@ export default {
                     console.log(err)
                 })
 
-            alert(uprofile_reponse.message)
+            this.alert.confirm = false
+            this.alert.message = uprofile_reponse.message
+
+            this.alert.okClicked = () => {
+                this.alert.show = false
+            }
+
+            this.alert.show = true
         },
 
         async update_username() {
@@ -248,9 +263,16 @@ export default {
                     console.log(err)
                 })
 
-            alert(uusername_reponse.message)
+            this.alert.confirm = false
+            this.alert.message = uusername_reponse.message
 
-            this.uchange.password = ''
+            this.alert.okClicked = () => {
+                this.uchange.password = ''
+
+                this.alert.show = false
+            }
+
+            this.alert.show = true
         },
 
         async update_password() {
@@ -263,11 +285,18 @@ export default {
                     console.log(err)
                 })
 
-            alert(upassword_reponse.message)
+            this.alert.confirm = false
+            this.alert.message = upassword_reponse.message
 
-            this.pchange.old_password = ''
-            this.pchange.new_password = ''
-            this.pchange.password_confirmation = ''
+            this.alert.okClicked = () => {
+                this.pchange.old_password = ''
+                this.pchange.new_password = ''
+                this.pchange.password_confirmation = ''
+
+                this.alert.show = false
+            }
+
+            this.alert.show = true
         },
 
         async getCurrentUser() {
@@ -279,8 +308,9 @@ export default {
                 })
 
             if(curruser_reponse.username) {
-                var user_info = curruser_reponse.current.user
+                var user_info = curruser_reponse.current.admin
 
+                this.username = curruser_reponse.current.username
                 this.user_fullname = user_info.first_name + ' ' + (user_info.middle_name ? user_info.middle_name[0] + '. ' : '') + user_info.last_name
                 this.user_regdate = this.$moment(user_info.created_at).format('LL')
                 this.account_info.first_name = user_info.first_name
@@ -288,6 +318,7 @@ export default {
                 this.account_info.last_name = user_info.last_name
                 this.account_info.email_address = user_info.email_address
                 this.account_info.mobile_number = user_info.mobile_number
+                this.account_info.position = user_info.position
                 this.uchange.username = curruser_reponse.username
             }
         }

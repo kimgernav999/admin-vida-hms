@@ -1,17 +1,50 @@
 <template>
     <div class="d-flex justify-content-center px-5">
-        <div class="align-self-center signup-wrapper bg-white border shadow-sm rounded-sm p-5">
-            <b-overlay :show="isBusy">
-                <div class="mb-5">
-                    <h2 class="font-weight-bold text-center">Create Account</h2>
-                    <h6 class="font-weight-lighter text-center text-black-50">Do more, book more! Create and account now to book reservations at our hotel.</h6>
+        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
+            <h3 class="mb-4">Employees</h3>
+            <div class="border py-3 rounded-sm">
+                <div class="d-flex mb-3">
+                    <div class="col">
+                        <b-button variant="success" class="rounded-circle" size="sm" title="New Employee" @click="$bvModal.show('new_employee')" v-b-tooltip.hover.noninteractive>
+                            <i class="fa fa-plus"></i>
+                        </b-button>
+                        <b-button variant="primary" class="rounded-circle" size="sm" title="Refresh" v-b-tooltip.hover.noninteractive @click="getAllEmployees">
+                            <i class="fa fa-refresh"></i>
+                        </b-button>
+                    </div>
+                    <div class="col">
+                        <b-input v-model="table.filter" class="form-control rounded-pill" size="sm" placeholder="Search Employee"></b-input>
+                    </div>
                 </div>
-                <b-form class="my-3" v-if="step == 0">
-                    <b-form-group class="mt-4">
-                        <b-button variant="primary" @click="signUp(++step)" block pill>Continue</b-button>
-                    </b-form-group>
-                </b-form>
-                <b-form class="my-3" v-if="step == 1" @keydown.enter="signUp(2)">
+                <div class="d-flex flex-column">
+                    <b-table class="border-bottom vw-75" :busy="table.isBusy" :fields="table.fields" :filter="table.filter" :filter-included-fields="table.filter_on" :current-page="table.current_page" :items="table.items" striped responsive show-empty>
+                        <template #cell(full_name)="row">
+                            {{ row.item.first_name + ' ' + (row.item.middle_name ? row.item.middle_name[0] + '. ' : '') + row.item.last_name }}
+                        </template>
+                        <template #cell(email_address)="row">
+                            {{ row.item.email_address }}
+                        </template>
+                        <template #cell(position)="row">
+                            {{ row.item.position }}
+                        </template>
+                        <template #cell(actions)="row">
+                            <div class="d-flex justify-content-center">
+                                <b-button variant="success" class="rounded-circle mx-1" size="sm" title="Update Record" v-b-tooltip.hover.noninteractive>
+                                    <i class="fa fa-edit"></i>
+                                </b-button>
+                                <b-button variant="primary" class="rounded-circle mx-1" size="sm" title="Delete Record" v-b-tooltip.hover.noninteractive>
+                                    <i class="fa fa-trash"></i>
+                                </b-button>
+                            </div>
+                        </template>
+                    </b-table>
+                    <b-pagination class="mx-auto my-0" v-model="table .current_page" :total-rows="table.items.length" :per-page="table.per_page"></b-pagination>
+                </div>
+            </div>
+        </div>
+        <b-modal id="new_employee" title="New Employee" centered scrollable no-close-on-backdrop>
+            <b-container fluid>
+                <b-form class="my-3" @keydown.enter="register_employee()">
                     <h6 class="font-weight-lighter text-center text-black-70">Basic Information</h6>
                     <div class="font-weight-lighter mb-3 text-center text-danger w-100" style="font-size: 9px;">* Required Field</div>
                     <b-form-group label="First Name *">
@@ -30,24 +63,9 @@
                         <b-form-select class="form-control rounded-pill" v-model="account_info.position" :options="position_options" @change="is_valid('position')"></b-form-select>
                         <span class="text-danger i-label" v-if="valid.position">{{ valid.position }}</span>
                     </b-form-group>
-                    <b-form-group>
-                        <b-form-checkbox v-model="accept_terms">
-                            <span class="cbox-label">
-                                I have read and agree to the <router-link class="terms-label" :to="{ name:'termsconditions' }">Terms and Conditions</router-link>.
-                            </span>
-                        </b-form-checkbox>
-                    </b-form-group>
                     <div class="d-flex mx-2 my-3">
                         <div class="col align-self-center separator separator-lightgray"></div>
                     </div>
-                    <div class="mb-4 px-2">
-                        <span class="d-block font-weight-lighter text-center text-black-50 note-text">Please visit our <router-link class="priv-label" :to="{ name: 'privacypolicy' }">Privacy Policy</router-link> to understand how we handle your personal data</span>
-                    </div>
-                    <b-form-group class="mt-4">
-                        <b-button variant="primary" @click="signUp(2)" block pill>Next</b-button>
-                    </b-form-group>
-                </b-form>
-                <b-form class="my-3" v-if="step == 2" @keydown.enter="signUp(3)">
                     <h6 class="font-weight-lighter text-center text-black-70">Login Credentials</h6>
                     <div class="font-weight-lighter mb-3 text-center text-danger w-100" style="font-size: 9px;">* Required Field</div>
                     <b-form-group label="Username *">
@@ -67,44 +85,53 @@
                         <b-form-input type="password" class="form-control rounded-pill" v-model="account_info.password_confirmation" @keyup="is_valid('password_confirmation')"></b-form-input>
                         <span class="text-danger i-label" v-if="valid.password_confirmation">{{ valid.password_confirmation }}</span>
                     </b-form-group>
-                    <b-form-group class="mt-4">
-                        <b-button variant="primary" @click="signUp(3)" block pill>Done</b-button>
-                    </b-form-group>
                 </b-form>
-                <div v-if="step == 0">
-                    <div class="d-flex my-4">
-                        <div class="col align-self-center separator"></div>
-                        <span class="col-auto align-self-center px-1">or</span>
-                        <div class="col align-self-center separator"></div>
-                    </div>
-                    <div class="mb-5">
-                        <h2 class="font-weight-bold text-center">Sign In</h2>
-                        <h6 class="font-weight-lighter text-center text-black-50">Already have an account? Sign In now!</h6>
-                    </div>
-                    <b-form-group class="mt-4">
-                        <router-link class="btn btn-block btn-warning rounded-pill" :to="{ name: 'signin' }">Sign In</router-link>
-                    </b-form-group>
+            </b-container>
+            <template #modal-footer>
+                <div class="d-flex justify-content-center w-100">
+                    <b-button class="mx-2 w-50" size="sm" variant="danger" @click="$bvModal.hide('new_employee')" block pill>Cancel</b-button>
+                    <b-button class="mx-2 w-50" size="sm" variant="primary" @click="register_employee()" block pill>Done</b-button>
                 </div>
-            </b-overlay>
-        </div>
-        <b-modal id="emailVerify" centered scrollable hide-header hide-footer no-close-on-backdrop>
-            Test
+            </template>
         </b-modal>
-        <alert id="signup_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
     </div>
 </template>
 
 <script>
-import Alert from './alert.vue'
-
 export default {
-    components: {
-        Alert
-    },
     data() {
         return {
-            completed: [false, false],
-            step: 0,
+            all_accounts: '',
+            table: {
+                isBusy: false,
+                current_page: 1,
+                filter: '',
+                filter_on: ['full_name', 'email_address', 'position'],
+                fields: [
+                    {
+                        key: 'full_name',
+                        label: 'Full Name',
+                        sortable: true
+                    },
+                    {
+                        key: 'email_address',
+                        label: 'Email Address',
+                        sortable: true
+                    },
+                    {
+                        key: 'position',
+                        label: 'Position',
+                        sortable: true
+                    },
+                    {
+                        key: 'actions',
+                        label: 'Actions',
+                        sortable: false,
+                    }
+                ],
+                items: [],
+                per_page: 6
+            },
             account_info: {
                 first_name: '',
                 last_name: '',
@@ -115,7 +142,6 @@ export default {
                 password_confirmation: ''
             },
             position_options: ['Select Position', 'Receptionist', 'Housekeeper', 'Administrator'],
-            accept_terms: false,
             valid: {
                 first_name: '',
                 last_name: '',
@@ -127,99 +153,30 @@ export default {
                 password_num: '',
                 password_confirmation: ''
             },
-            username_status: '',
-            isBusy: false,
-            alert: {
-                show: false,
-                title: 'Notice',
-                message: '',
-                confirm: false,
-                okText: 'Ok',
-                cancelText: 'Cancel',
-                okClicked: () => {this.alert.show = false},
-                cancelClicked: () => {this.alert.show = false},
-            }
+            isBusy: false
         }
     },
 
     methods: {
-        async signUp(step) {
-            switch (step) {
-                case 1:
-                    this.step = 1
-                    break
+        async getAllEmployees() {
+            this.table.isBusy = true
 
-                case 2:
-                    this.completed[0] = this.account_info.first_name && this.account_info.last_name && this.account_info.email_address && this.account_info.position != 'Select Position'
+            this.all_accounts = await axios.post('/api/accounts/allAccounts', {
+                    user_role: 'employee'
+                })
+                .then((resp) => {
+                    this.table.isBusy = false
+                    return resp.data
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
 
-                    if(this.completed[0]){
-                        if(this.accept_terms) {
-                            this.step = 2
-                        }
-                        else {
-                            this.alert.confirm = false
-                            this.alert.message = 'Please agree to the Terms and Conditions to continue!'
+            this.table.items = []
 
-                            this.alert.okClicked = () => {
-                                this.alert.show = false
-                            }
-
-                            this.alert.show = true
-                        }
-                    }
-                    else {
-                        this.alert.confirm = false
-                        this.alert.message = 'Please complete all fields!'
-
-                        this.alert.okClicked = () => {
-                            this.alert.show = false
-                        }
-
-                        this.alert.show = true
-                    }
-                    break
-
-                case 3:
-                    this.completed[1] = this.account_info.username && this.account_info.password && this.account_info.password_confirmation
-
-                    if(this.completed[1]){
-                        this.isBusy = true
-
-                        var register_response = await axios.post('/api/accounts/signup',
-                                this.account_info
-                            ).then((resp) => {
-                                this.isBusy = false
-
-                                this.alert.confirm = false
-                                this.alert.message = resp.data.message
-
-                                this.alert.okClicked = () => {
-                                    this.alert.show = false
-                                    this.$emit('signedin')
-                                }
-
-                                this.alert.show = true
-
-                                return resp.data
-                            }).catch((err) => {
-                                console.log(err)
-                            })
-                    }
-                    else {
-                        this.alert.confirm = false
-                        this.alert.message = 'Please complete all fields!'
-
-                        this.alert.okClicked = () => {
-                            this.alert.show = false
-                        }
-
-                        this.alert.show = true
-                    }
-                    break
-
-                default:
-                    break
-            }
+            this.all_accounts.forEach((item) => {
+                this.table.items.push(item.admin)
+            })
         },
 
         is_valid(field) {
@@ -301,17 +258,13 @@ export default {
         }
     },
 
-    watch: {
-
+    mounted() {
+        this.getAllEmployees()
     }
 }
 </script>
 
 <style scoped>
-    .signup-wrapper {
-        width: 420px;
-    }
-
     .separator {
         border-bottom: solid 1px gray;
         height: 1px;
@@ -319,22 +272,5 @@ export default {
 
     .separator-lightgray {
         border-bottom: solid 1px lightgray;
-    }
-
-    .cbox-label, .fpass-label, .terms-label, .priv-label {
-        font-size: 14px;
-    }
-
-    .priv-label {
-        font-size: 13px;
-    }
-
-    .note-text {
-        font-size: 13px;
-    }
-
-    .fpass-label:hover, .terms-label:hover, .priv-label:hover {
-        color: #007BFF;
-        text-decoration: none;
     }
 </style>

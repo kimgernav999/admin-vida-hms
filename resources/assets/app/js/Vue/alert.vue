@@ -1,5 +1,5 @@
 <template>
-    <b-modal v-model="show" id="alert" size="sm" :title="title" centered hide-header-close no-close-on-backdrop hide-header>
+    <b-modal :id="id" size="sm" :title="title" centered hide-header-close no-close-on-backdrop hide-header>
         <b-container fluid>
             <div class="text-center mt-2 alert-header w-100">
                 {{ title.toUpperCase() }}
@@ -27,6 +27,10 @@
 
         props: {
             visible: Boolean,
+            id: {
+                type: String,
+                required: false
+            },
             title: {
                 type: String,
                 default: 'Notice'
@@ -53,13 +57,13 @@
             }
         },
 
-        computed: {
-            show: {
-                get: function() {
-                    return this.visible
-                },
-                set: function(value) {
-                    this.$emit('visible', value)
+        watch: {
+            visible: function(val) {
+                if(val) {
+                    this.$bvModal.show(this.id)
+                }
+                else {
+                    this.$bvModal.hide(this.id)
                 }
             }
         }

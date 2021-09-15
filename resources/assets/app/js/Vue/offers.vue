@@ -1,7 +1,10 @@
 <template>
-  <div class="m-2">
-      <h4>Offers</h4>
-  </div>
+    <div class="d-flex justify-content-center px-5">
+        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
+            <h3 class="mb-5">Promo Offers</h3>
+            <h6 class="text-center">Work on progress!</h6>
+        </div>
+    </div>
 </template>
 
 <script>

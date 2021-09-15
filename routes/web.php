@@ -13,14 +13,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('/')->group(function () {
-    // $route_groups = [];
-
-    Route::get('', function (Request $request) {
-        return view('index');
-    });
-
-    Route::get('{any}', function (Request $request) {
-        return view('index');
-    })->where('any', '.*');//'\b(?:(?!' . implode('|', $route_groups) . ')\b)\w+');
-});
+Route::get('/{any}', function (Request $request) {
+    return view('index');
+})->where('any', '.*');

@@ -10,16 +10,16 @@
         <link rel="stylesheet" href="//unpkg.com/leaflet/dist/leaflet.css" />
 
         <script src="https://use.fontawesome.com/1204a62f15.js"></script>
-        <title>Vida Emirate Hills Hotels</title>
+        <title>Vida Emirate Hills Hotel</title>
     </head>
     <body class="antialiased">
         <div id="app">
-            <topbar logo-url="{{ asset('storage/media/logo-vida.svg') }}" :is-logged-in="isLoggedIn" :user-fullname="user_fullname" @signedout="signedOut"></topbar>
-            <div class="d-flex content">
-                <router-view class="flex-fill" @signedin="signedIn" @profilechanged="profileChanged"></router-view>
+            <topbar logo-url="{{ asset('storage/media/logo-vida.svg') }}" v-if="isLoggedIn" :is-logged-in="isLoggedIn" :user-fullname="user_fullname" @signedout="signedOut" @togglesidebar="toggleSidebar"></topbar>
+            <div class="d-flex flex-row content">
+                <sidebar class="vh-100" :username="username" v-if="sidebar_visible && isLoggedIn"></sidebar>
+                <router-view :class="'flex-fill' + (sidebar_visible && isLoggedIn ? ' sidebar_shown' : '')" @signedin="signedIn" @profilechanged="profileChanged"></router-view>
             </div>
-            <footr logo-url="{{ asset('storage/media/logo-vida.svg') }}"></footr>
-            <alert :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :ok-text="alert.okText" :cancel-text="alert.cancelText" :ok-clicked="alert.okClicked" :cancel-clicked="alert.cancelClicked" ></alert>
+            <alert id="main_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :ok-text="alert.okText" :cancel-text="alert.cancelText" :ok-clicked="alert.okClicked" :cancel-clicked="alert.cancelClicked" ></alert>
         </div>
 
         <script src="https://code.jquery.com/jquery-3.5.1.slim.js"></script>

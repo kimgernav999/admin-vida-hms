@@ -23,6 +23,7 @@ Route::prefix('accounts')->group(function () {
     Route::post('updateProfile', [AccountsController::class, 'updateProfile']);
     Route::post('updateUsername', [AccountsController::class, 'updateUsername']);
     Route::post('updatePassword', [AccountsController::class, 'updatePassword']);
+    Route::post('allAccounts', [AccountsController::class, 'allAccounts']);
     Route::get('test', [AccountsController::class, 'test']);
     Route::get('checkEmail', [AccountsController::class, 'checkEmail']);
     Route::get('checkUsername', [AccountsController::class, 'checkUsername']);

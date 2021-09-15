@@ -15,16 +15,17 @@ class Account extends Model
 
     protected $fillable = [
         'username',
-        'password'
-    ];
-
-    protected $attributes = [
-        'user_role' => 'guest'
+        'password',
+        'user_role'
     ];
 
     protected $hidden = [
         'password'
     ];
+
+    public function admin() {
+        return $this->hasOne(Admin::class, 'account_id', 'account_id');
+    }
 
     public function user() {
         return $this->hasOne(User::class, 'account_id', 'account_id');

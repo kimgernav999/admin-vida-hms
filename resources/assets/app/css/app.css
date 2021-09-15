@@ -3,6 +3,19 @@ body {
     background-color: #f6f6f6 !important;
 }
 
+.no-arrow {
+    cursor: pointer;
+}
+
+th:last-child {
+    text-align: center;
+    width: 160px !important;
+}
+
+.sidebar_shown {
+    margin-left: 258px !important;
+}
+
 .content {
     min-height: calc(100vh - 85px);
     margin-top: 85px !important;

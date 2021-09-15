@@ -1,7 +1,19 @@
-<<<<<<< HEAD
 body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #f6f6f6 !important;
+}
+
+.no-arrow {
+    cursor: pointer;
+}
+
+th:last-child {
+    text-align: center;
+    width: 160px !important;
+}
+
+.sidebar_shown {
+    margin-left: 258px !important;
 }
 
 .content {
@@ -44,8 +56,4 @@ body {
     border-top-right-radius: 10rem !important;
     border-bottom-right-radius: 10rem !important;
 }
-=======
-body{background-color:#f6f6f6!important;font-family:Segoe UI,sans-serif}.content{margin-top:85px!important;min-height:calc(100vh - 85px)}.form-group>legend,.i-label{color:gray;font-size:12px;margin:0 15px 2px;padding:0}.form-group>div{width:100%}.form-control{padding:8px 15px!important}.r-left{border:1px solid #d3d3d3!important;border-bottom-left-radius:10rem!important;border-right:0!important;border-top-left-radius:10rem!important}.r-middle{border-bottom:1px solid #d3d3d3!important;border-radius:0!important;border-top:1px solid #d3d3d3!important}.r-right{border:1px solid #d3d3d3!important;border-bottom-right-radius:10rem!important;border-left:0!important;border-top-right-radius:10rem!important}
->>>>>>> fbd520de73869736d783d9f058c62881b5369de3
 
-/*# sourceMappingURL=app.css.map*/

@@ -1,9 +1,9 @@
 <template>
-    <div class="d-flex justify-content-center m-2 py-5">
+    <div class="d-flex justify-content-center px-5">
         <div class="align-self-center signin-wrapper bg-white border shadow-sm rounded-sm p-5" @keydown.enter="signIn">
-            <div class="mb-5">
-                <h2 class="font-weight-bold text-center">Sign In</h2>
-                <h6 class="font-weight-lighter text-center text-black-50">Connect with us and Manage your Reservations</h6>
+            <div class="mb-5 text-center">
+                <img src="/storage/media/logo-vida.svg" class="mb-3 navbar-logo" alt="">
+                <h2 class="font-weight-bold text-center">Administrator Login</h2>
             </div>
             <b-overlay :show="isBusy" opacity="0.3">
                 <b-form class="my-3">
@@ -26,20 +26,8 @@
                     </b-form-group>
                 </b-form>
             </b-overlay>
-            <div class="d-flex my-4">
-                <div class="col align-self-center separator"></div>
-                <span class="col-auto align-self-center px-2">or</span>
-                <div class="col align-self-center separator"></div>
-            </div>
-            <div class="mb-5">
-                <h2 class="font-weight-bold text-center">Sign Up</h2>
-                <h6 class="font-weight-lighter text-center text-black-50">No account? Sign Up now!</h6>
-            </div>
-                <b-form-group class="mt-4">
-                <router-link class="btn btn-block btn-warning rounded-pill" :to="{ name: 'signup' }">Sign Up</router-link>
-            </b-form-group>
         </div>
-        <alert :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
+        <alert id="signin_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
     </div>
 </template>
 
@@ -106,6 +94,10 @@ export default {
 </script>
 
 <style scoped>
+    .navbar-logo {
+        height: 90px;
+    }
+
     .signin-wrapper {
         width: 420px;
     }
