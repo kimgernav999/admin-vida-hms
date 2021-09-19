@@ -146,15 +146,11 @@ const app = new Vue({
 
                     if(!cred_route.includes(this.$route.name))
                         this.$router.push('/')
-
-                    this.$emit('signedout')
                 }
             }
             else {
                 if(!cred_route.includes(this.$route.name))
                     this.$router.push('/')
-
-                this.$emit('signedout')
             }
         },
     },
