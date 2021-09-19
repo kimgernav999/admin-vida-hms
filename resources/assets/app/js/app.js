@@ -52,7 +52,7 @@ const app = new Vue({
             username: 'N/A',
             user_fullname: 'N/A',
             checkSession: null,
-            checkSessionInterval: 5000,
+            checkSessionInterval: 1800000,
             isLoggedIn: false,
             alert: {
                 show: false,
@@ -79,7 +79,7 @@ const app = new Vue({
         signedIn() {
             this.getCurrentUser()
 
-            // this.startCheckSession(true)
+            this.startCheckSession(true)
 
             this.isLoggedIn = true
         },
@@ -87,7 +87,7 @@ const app = new Vue({
         signedOut() {
             this.getCurrentUser()
 
-            // this.startCheckSession(false)
+            this.startCheckSession(false)
 
             this.isLoggedIn = false
         },
@@ -110,7 +110,7 @@ const app = new Vue({
         },
 
         fixDropdownUnshow() {
-            var dropMenu = document.querySelector('.show')
+            var dropMenu = document.querySelector('.dropdown-menu.show')
             if(dropMenu) dropMenu.classList.remove('show')
         },
 
@@ -162,7 +162,8 @@ const app = new Vue({
     mounted() {
         this.getCurrentUser()
 
-        // this.startCheckSession(true)
+        if(this.isLoggedIn)
+            this.startCheckSession(true)
 
         document.addEventListener("click", this.fixDropdownUnshow);
     },

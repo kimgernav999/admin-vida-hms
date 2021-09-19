@@ -16,15 +16,17 @@ class Admin extends Model
     protected $fillable = [
         'account_id',
         'first_name',
+        'middle_name',
         'last_name',
+        'gender',
+        'birth_date',
         'email_address',
-        'position'
+        'position',
+        'mobile_number'
     ];
 
     protected $attributes = [
-        'email_address_verified' => false,
-        'middle_name' => null,
-        'mobile_number' => null
+        'email_address_verified' => false
     ];
 
     protected $hidden = [

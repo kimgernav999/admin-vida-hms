@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class PasswordResetTokens extends Migration
+class Accounts extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,11 @@ class PasswordResetTokens extends Migration
      */
     public function up()
     {
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->id();
-            $table->string('email_address');
-            $table->string('reset_token');
+        Schema::create('accounts', function (Blueprint $table) {
+            $table->id('account_id');
+            $table->string('username');
+            $table->string('password');
+            $table->string('user_role');
             $table->timestamps();
         });
     }
@@ -28,6 +29,6 @@ class PasswordResetTokens extends Migration
      */
     public function down()
     {
-        Schema::drop('password_reset_tokens');
+        Schema::drop('accounts');
     }
 }

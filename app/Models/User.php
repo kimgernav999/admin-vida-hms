@@ -16,14 +16,16 @@ class User extends Model
     protected $fillable = [
         'account_id',
         'first_name',
+        'middle_name',
         'last_name',
-        'email_address'
+        'gender',
+        'birth_date',
+        'email_address',
+        'mobile_number',
     ];
 
     protected $attributes = [
         'email_address_verified' => false,
-        'middle_name' => null,
-        'mobile_number' => null,
         'paypal_id' => null
     ];
 

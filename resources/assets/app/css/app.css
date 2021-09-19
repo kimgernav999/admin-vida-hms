@@ -12,6 +12,10 @@ th:last-child {
     width: 160px !important;
 }
 
+.text-area-wrapper {
+    border-radius: 1rem;
+}
+
 .sidebar_shown {
     margin-left: 258px !important;
 }

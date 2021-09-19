@@ -9,8 +9,9 @@
 
         <ul class="navbar-nav ml-auto mx-4">
             <div :class="'nav-item position-relative m-0 ' + (location == '/settings' ? ' active' : '')" data-target="#profilemenu" data-toggle="collapse">
-                <a class="nav-link font-weight-bold text-dark" href="javascript:void(0)">
-                    {{ userFullname }}
+                <a class="d-flex nav-link font-weight-bold text-dark" href="javascript:void(0)">
+                    <i class="fa fa-user-circle mr-2" style="font-size: 32px;"></i>
+                    <div style="line-height: 32px; vertical-align: center;">{{ userFullname }}</div>
                 </a>
                 <div id="profilemenu" class="bg-white border-light dropdown-menu dropdown-menu-right mt-2 p-2 position-absolute shadow">
                     <div class="d-flex flex-column">
@@ -49,8 +50,8 @@ export default {
                 confirm: false,
                 okText: 'Ok',
                 cancelText: 'Cancel',
-                okClicked: () => {this.alert.show = false},
-                cancelClicked: () => {this.alert.show = false},
+                okClicked: () => {this.$bvModal.hide('topbar_alert')},
+                cancelClicked: () => {this.$bvModal.hide('topbar_alert')},
             }
         }
     },
@@ -80,14 +81,14 @@ export default {
 
                 this.$emit('signedout')
 
-                this.alert.show = false;
+                this.$bvModal.hide('topbar_alert');
             }
 
             this.alert.cancelClicked = () => {
-                this.alert.show = false;
+                this.$bvModal.hide('topbar_alert');
             }
 
-            this.alert.show = true;
+            this.$bvModal.show('topbar_alert');
         },
 
         ucwords(str) {

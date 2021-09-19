@@ -1,5 +1,5 @@
 <template>
-    <div class="d-flex justify-content-center px-5">
+    <div class="d-flex justify-content-center p-5">
         <div class="align-self-center signup-wrapper bg-white border shadow-sm rounded-sm p-5">
             <b-overlay :show="isBusy">
                 <div class="mb-5">
@@ -87,7 +87,7 @@
                 </div>
             </b-overlay>
         </div>
-        <b-modal id="emailVerify" centered scrollable hide-header hide-footer no-close-on-backdrop>
+        <b-modal id="emailVerify" centered scrollable no-close-on-backdrop hide-header hide-footer>
             Test
         </b-modal>
         <alert id="signup_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
@@ -136,8 +136,8 @@ export default {
                 confirm: false,
                 okText: 'Ok',
                 cancelText: 'Cancel',
-                okClicked: () => {this.alert.show = false},
-                cancelClicked: () => {this.alert.show = false},
+                okClicked: () => {this.$bvModal.hide('signup_alert')},
+                cancelClicked: () => {this.$bvModal.hide('signup_alert')},
             }
         }
     },
@@ -161,10 +161,10 @@ export default {
                             this.alert.message = 'Please agree to the Terms and Conditions to continue!'
 
                             this.alert.okClicked = () => {
-                                this.alert.show = false
+                                this.$bvModal.hide('signup_alert')
                             }
 
-                            this.alert.show = true
+                            this.$bvModal.show('signup_alert')
                         }
                     }
                     else {
@@ -172,10 +172,10 @@ export default {
                         this.alert.message = 'Please complete all fields!'
 
                         this.alert.okClicked = () => {
-                            this.alert.show = false
+                            this.$bvModal.hide('signup_alert')
                         }
 
-                        this.alert.show = true
+                        this.$bvModal.show('signup_alert')
                     }
                     break
 
@@ -194,11 +194,11 @@ export default {
                                 this.alert.message = resp.data.message
 
                                 this.alert.okClicked = () => {
-                                    this.alert.show = false
+                                    this.$bvModal.hide('signup_alert')
                                     this.$emit('signedin')
                                 }
 
-                                this.alert.show = true
+                                this.$bvModal.show('signup_alert')
 
                                 return resp.data
                             }).catch((err) => {
@@ -210,10 +210,10 @@ export default {
                         this.alert.message = 'Please complete all fields!'
 
                         this.alert.okClicked = () => {
-                            this.alert.show = false
+                            this.$bvModal.hide('signup_alert')
                         }
 
-                        this.alert.show = true
+                        this.$bvModal.show('signup_alert')
                     }
                     break
 

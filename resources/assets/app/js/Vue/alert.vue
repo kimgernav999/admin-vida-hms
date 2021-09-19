@@ -1,5 +1,5 @@
 <template>
-    <b-modal :id="id" size="sm" :title="title" centered hide-header-close no-close-on-backdrop hide-header>
+    <b-modal :id="id" size="sm" :title="title" centered hide-header-close hide-header>
         <b-container fluid>
             <div class="text-center mt-2 alert-header w-100">
                 {{ title.toUpperCase() }}

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AdminProfiles extends Migration
+class Users extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class AdminProfiles extends Migration
      */
     public function up()
     {
-        Schema::create('admins_profile', function (Blueprint $table) {
+        Schema::create('users_profile', function (Blueprint $table) {
             $table->id('profile_id');
             $table->integer('account_id');
             $table->string('first_name');
@@ -24,7 +24,7 @@ class AdminProfiles extends Migration
             $table->string('email_address');
             $table->boolean('email_address_verified');
             $table->string('mobile_number')->nullable();
-            $table->string('position')->nullable();
+            $table->string('paypal_id')->nullable();
             $table->timestamps();
         });
     }
@@ -36,6 +36,6 @@ class AdminProfiles extends Migration
      */
     public function down()
     {
-        Schema::drop('admins_profile');
+        Schema::drop('users_profile');
     }
 }

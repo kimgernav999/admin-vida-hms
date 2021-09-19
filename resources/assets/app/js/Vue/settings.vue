@@ -1,5 +1,5 @@
 <template>
-    <div class="d-flex justify-content-center px-5">
+    <div class="d-flex justify-content-center p-5">
         <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
             <h3 class="mb-5">Account Settings</h3>
             <b-row>
@@ -7,10 +7,13 @@
                     <i class="fa fa-user-circle mb-4" style="font-size: 120px;"></i>
                     <h5 class="font-weight-bolder">{{ user_fullname }}</h5>
                     <h6 class="font-weight-bold">Registered since {{ user_regdate }}</h6>
-                    <div class="mt-5">
-                        <b-alert class="d-flex" variant="warning" show>
+                    <div class="d-none mt-5" id="alerts">
+                        <b-alert class="d-flex" variant="warning"  :show="!account_info.email_address_verified">
                             <span class="mt-1">Email not verified!</span>
-                            <b-button class="ml-auto alert-btn" variant="secondary" size="sm" pill>Verify</b-button>
+                            <b-button class="ml-auto alert-btn" variant="secondary" size="sm" :disabled="ev_busy" @click="send_emailverify_mail" pill>
+                                <i :class="'fa fa-spinner' + (ev_busy ? ' mr-1 fa-spin' : 'd-none')"></i>
+                                Verify
+                            </b-button>
                         </b-alert>
                     </div>
                 </b-col>
@@ -32,7 +35,17 @@
                                         <b-form-input class="form-control rounded-pill" v-model="account_info.last_name" :disabled="username == 'superadmin'" @keyup="is_valid('last_name')"></b-form-input>
                                         <span class="text-danger i-label" v-if="valid.lastname">{{ valid.lastname }}</span>
                                     </b-form-group>
-                                    <b-form-group label="Email Address *">
+                                    <b-form-row v-if="username != 'superadmin'">
+                                        <b-form-group class="col" label="Gender *">
+                                            <b-form-select class="form-control rounded-pill" v-model="account_info.gender" :options="gender_options" @change="is_valid('gender')"></b-form-select>
+                                            <span class="text-danger i-label" v-if="valid.gender">{{ valid.gender }}</span>
+                                        </b-form-group>
+                                        <b-form-group class="col" label="Birth Date *">
+                                            <b-form-input type="date" class="form-control rounded-pill" v-model="account_info.birth_date" @change="is_valid('birth_date')"></b-form-input>
+                                            <span class="text-danger i-label" v-if="valid.birth_date">{{ valid.birth_date }}</span>
+                                        </b-form-group>
+                                    </b-form-row>
+                                    <b-form-group :label="'Email Address *' + (account_info.email_address_verified ? ' (Verified)' : ' (Not Verified)')">
                                         <b-form-input type="email" class="form-control rounded-pill" v-model="account_info.email_address" @keyup="check_email"></b-form-input>
                                         <span class="text-danger i-label" v-if="valid.email_address">{{ valid.email_address }}</span>
                                     </b-form-group>
@@ -44,7 +57,7 @@
                                         <span class="text-danger i-label" v-if="valid.position">{{ valid.position }}</span>
                                     </b-form-group>
                                     <b-form-group class="mt-4">
-                                        <b-button variant="primary" @click="update_profile" :disabled="(valid.first_name != '' && account_info.first_name == '') || (valid.last_name != '' && account_info.last_name == '') || (valid.email_address != '' && account_info.email_address == '')" block pill>Save Changes</b-button>
+                                        <b-button variant="primary" @click="update_profile" :disabled="(valid.first_name != '' && account_info.first_name == '') || (valid.last_name != '' && account_info.last_name == '') || (valid.email_address != '' && account_info.email_address == '') || (valid.birth_date != '' && account_info.birth_date == '') || (valid.gender != '' && account_info.gender == 'Select Gender')" block pill>Save Changes</b-button>
                                     </b-form-group>
                                 </b-overlay>
                             </b-tab>
@@ -113,10 +126,15 @@ export default {
                 first_name: '',
                 middle_name: '',
                 last_name: '',
+                gender: 'Select Gender',
+                birth_date: '',
                 email_address: '',
+                old_email_address: '',
+                email_address_verified: false,
                 mobile_number: '',
                 position: ''
             },
+            gender_options: ['Select Gender', 'Male', 'Female'],
             position_options: ['Select Position', 'Receptionist', 'Housekeeper', 'Administrator'],
             uchange: {
                 username: '',
@@ -130,6 +148,8 @@ export default {
             valid: {
                 first_name: '',
                 last_name: '',
+                gender: '',
+                birth_date: '',
                 email_address: '',
                 position: '',
                 username: '',
@@ -138,6 +158,7 @@ export default {
                 password_num: '',
                 password_confirmation: ''
             },
+            ev_busy: false,
             pi_busy: false,
             lcu_busy: false,
             lcp_busy: false,
@@ -148,8 +169,8 @@ export default {
                 confirm: false,
                 okText: 'Ok',
                 cancelText: 'Cancel',
-                okClicked: () => {this.alert.show = false},
-                cancelClicked: () => {this.alert.show = false},
+                okClicked: () => {this.$bvModal.hide('settings_alert')},
+                cancelClicked: () => {this.$bvModal.hide('settings_alert')},
             }
         }
     },
@@ -177,6 +198,14 @@ export default {
                 case 'email_address':
                     var valid_email = regex_email.test(this.account_info.email_address)
                     this.valid.email_address = !valid_email ? 'Invalid email address' : ''
+                    break
+
+                case 'gender':
+                    this.valid.gender = this.account_info.gender == 'Select Gender' ? 'Field is required' : ''
+                    break
+
+                case 'birth_date':
+                    this.valid.birth_date = !this.account_info.birth_date ? 'Field is required' : ''
                     break
 
                 case 'position':
@@ -234,6 +263,8 @@ export default {
         },
 
         async update_profile() {
+            document.getElementById('alerts').classList.add('d-none')
+
             var uprofile_reponse = await axios.post('/api/accounts/updateProfile', this.account_info)
                 .then((resp) => {
                     this.$emit('profilechanged')
@@ -247,10 +278,10 @@ export default {
             this.alert.message = uprofile_reponse.message
 
             this.alert.okClicked = () => {
-                this.alert.show = false
+                this.$bvModal.hide('settings_alert')
             }
 
-            this.alert.show = true
+            this.$bvModal.show('settings_alert')
         },
 
         async update_username() {
@@ -269,10 +300,10 @@ export default {
             this.alert.okClicked = () => {
                 this.uchange.password = ''
 
-                this.alert.show = false
+                this.$bvModal.hide('settings_alert')
             }
 
-            this.alert.show = true
+            this.$bvModal.show('settings_alert')
         },
 
         async update_password() {
@@ -293,37 +324,78 @@ export default {
                 this.pchange.new_password = ''
                 this.pchange.password_confirmation = ''
 
-                this.alert.show = false
+                this.$bvModal.hide('settings_alert')
             }
 
-            this.alert.show = true
+            this.$bvModal.show('settings_alert')
         },
 
         async getCurrentUser() {
             var curruser_reponse = await axios.post('/api/accounts/current')
                 .then((resp) => {
+                    if(resp.data.username) {
+                        var user_info = resp.data.current.admin
+
+                        this.username = resp.data.current.username
+                        this.uchange.username = resp.data.username
+                        this.user_fullname = user_info.first_name + ' ' + (user_info.middle_name ? user_info.middle_name[0] + '. ' : '') + user_info.last_name
+                        this.user_regdate = this.$moment(user_info.created_at).format('LL')
+                        this.account_info.first_name = user_info.first_name
+                        this.account_info.middle_name = user_info.middle_name
+                        this.account_info.last_name = user_info.last_name
+                        this.account_info.gender = user_info.gender
+                        this.account_info.birth_date = user_info.birth_date
+                        this.account_info.email_address = user_info.email_address
+                        this.account_info.old_email_address = user_info.email_address
+                        this.account_info.email_address_verified = user_info.email_address_verified
+                        this.account_info.mobile_number = user_info.mobile_number
+                        this.account_info.position = user_info.position
+                    }
+
+                    setTimeout(() => {
+                        document.getElementById('alerts').classList.remove('d-none')
+                    }, 1000);
+
                     return resp.data
                 }).catch((err) => {
                     console.log(err)
                 })
+        },
 
-            if(curruser_reponse.username) {
-                var user_info = curruser_reponse.current.admin
+        async send_emailverify_mail() {
+            this.ev_busy = true
 
-                this.username = curruser_reponse.current.username
-                this.user_fullname = user_info.first_name + ' ' + (user_info.middle_name ? user_info.middle_name[0] + '. ' : '') + user_info.last_name
-                this.user_regdate = this.$moment(user_info.created_at).format('LL')
-                this.account_info.first_name = user_info.first_name
-                this.account_info.middle_name = user_info.middle_name
-                this.account_info.last_name = user_info.last_name
-                this.account_info.email_address = user_info.email_address
-                this.account_info.mobile_number = user_info.mobile_number
-                this.account_info.position = user_info.position
-                this.uchange.username = curruser_reponse.username
-            }
+            var emailverify_response = await axios.post('/api/token/emailverify/create',
+                    this.emailVerifyInfo
+                ).then((resp) => {
+                    this.ev_busy = false
+
+                    this.alert.confirm = false
+                    this.alert.message = resp.data.message
+
+                    this.alert.okClicked = () => {
+                        this.$bvModal.hide('settings_alert')
+                        this.emailVerifyInfo.email_address = ''
+                        this.$router.push('/')
+                    }
+
+                    this.$bvModal.show('settings_alert')
+
+                    return resp.data
+                }).catch((err) => {
+                    this.ev_busy = false
+                    console.log(err)
+                })
         }
     },
 
+    computed: {
+        emailVerifyInfo() {
+            return {
+                email_address: this.account_info.old_email_address
+            }
+        }
+    },
     mounted() {
         this.getCurrentUser()
     }

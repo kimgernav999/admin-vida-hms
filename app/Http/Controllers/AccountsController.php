@@ -11,44 +11,71 @@ use App\Models\User;
 
 class AccountsController extends Controller
 {
-    public function signup(Request $request)
+    public function create(Request $request)
     {
-        $message = '';
-
         $new_account = Account::create([
             'username' => $request->username,
-            'password' => Hash::make($request->password)
+            'password' => Hash::make($request->password),
+            'user_role' => $request->user_role
         ]);
 
-        if(!$new_account) {
-            $message = 'Sign up failed!';
+        $new_user = null;
+
+        switch($request->user_role){
+            case 'employee':
+                $new_user = Admin::create([
+                    'account_id' => $new_account->account_id,
+                    'first_name' => $request->first_name,
+                    'middle_name' => $request->middle_name,
+                    'last_name' => $request->last_name,
+                    'gender' => $request->gender,
+                    'birth_date' => $request->birth_date,
+                    'email_address' => $request->email_address,
+                    'mobile_number' => $request->mobile_number,
+                    'position' => $request->position
+                ]);
+                break;
+
+            case 'guest':
+                $new_user = User::create([
+                    'account_id' => $new_account->account_id,
+                    'first_name' => $request->first_name,
+                    'middle_name' => $request->middle_name,
+                    'last_name' => $request->last_name,
+                    'gender' => $request->gender,
+                    'birth_date' => $request->birth_date,
+                    'email_address' => $request->email_address,
+                    'mobile_number' => $request->mobile_number
+                ]);
+                break;
         }
-
-        $new_user = Admin::create([
-            'account_id' => $new_account->account_id,
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email_address' => $request->email_address,
-            'position' => $request->position
-        ]);
 
         if(!$new_user) {
             $new_account->delete();
-            $message = 'Sign up failed!';
         }
-
-        $expiredate = Carbon::now('Asia/Manila')->addHours(1);
-
-        session(['username' => $request->username]);
-        session(['expires_at' => $expiredate]);
-
-        $message = 'Sign up success!';
 
         return response(
             array(
-                'account' => $new_account,
-                'user_profile' => $new_user,
-                'message' => $message
+                'message' =>  ($new_account && $new_user) ? 'Employee registration success!' : 'Employee registration failed!'
+            )
+        );
+    }
+
+    public function delete(Request $request) {
+        $del_account = Account::where('account_id', $request->account_id)
+            ->first();
+
+        $del_profile = Admin::where('account_id', $request->account_id)
+            ->first();
+
+        if($del_account && $del_profile){
+            $del_account = $del_account->delete();
+            $del_profile = $del_profile->delete();
+        }
+
+        return response(
+            array(
+                'message' => ($del_account && $del_profile) ? 'Employee Record deleted!' : 'Employee Record delete failed!'
             )
         );
     }
@@ -127,8 +154,10 @@ class AccountsController extends Controller
 
     public function updateProfile(Request $request)
     {
-        $curr_account = Account::where('username', $request->username ? $request->username : session('username'))
+        $curr_account = Account::where(isset($request->account_id) ? 'account_id' : 'username', isset($request->account_id) ? $request->account_id : session('username'))
             ->first();
+
+        $email_changed = $request->email_address != $request->old_email_address;
 
         $user_profile = '';
         $saved = false;
@@ -138,26 +167,49 @@ class AccountsController extends Controller
                 $user_profile = Admin::where('account_id', $curr_account->account_id)
                     ->first();
 
+                if(isset($request->username))
+                    $curr_account->username = $request->username;
+
+                if(isset($request->password))
+                    $curr_account->password = Hash::make($request->password);
+
                 $user_profile->first_name = $request->first_name;
                 $user_profile->middle_name = $request->middle_name;
                 $user_profile->last_name = $request->last_name;
+                $user_profile->gender = $request->gender;
+                $user_profile->birth_date =  $request->birth_date;
                 $user_profile->email_address = $request->email_address;
                 $user_profile->mobile_number = $request->mobile_number;
                 $user_profile->position = $request->position;
-                $saved = $user_profile->save();
+
+                if($email_changed)
+                    $user_profile->email_address_verified = false;
+
+                $saved = $user_profile->save() && $curr_account->save();
                 break;
 
             case 'guest':
                 $user_profile = User::where('account_id', $curr_account->account_id)
                     ->first();
 
+                if(isset($request->username))
+                    $curr_account->username = $request->username;
+
+                if(isset($request->password))
+                    $curr_account->password = Hash::make($request->password);
+
                 $user_profile->first_name = $request->first_name;
                 $user_profile->middle_name = $request->middle_name;
                 $user_profile->last_name = $request->last_name;
+                $user_profile->gender = $request->gender;
+                $user_profile->birth_date =  $request->birth_date;
                 $user_profile->email_address = $request->email_address;
                 $user_profile->mobile_number = $request->mobile_number;
-                $user_profile->paypal_id = $request->paypal_id;
-                $saved = $user_profile->save();
+
+                if($email_changed)
+                    $user_profile->email_address_verified = false;
+
+                $saved = $user_profile->save() && $curr_account->save();
                 break;
 
             default:
@@ -236,10 +288,14 @@ class AccountsController extends Controller
     {
         switch ($request->user_role) {
             case 'employee':
-                if(!$request->self){
-                    $user = Admin::where([
-                        'email_address' => $request->email_address
-                    ])->first();
+                if(isset($request->username)){
+                    $curr_user = Account::with('admin')
+                        ->where('username', $request->username)
+                        ->first();
+
+                    $user = Admin::where('email_address', $request->email_address)
+                        ->where('email_address', '!=', $curr_user->admin->email_address ?? null)
+                        ->first();
                 }
                 else {
                     $curr_user = Account::with('admin')
@@ -253,10 +309,14 @@ class AccountsController extends Controller
                 break;
 
             case 'guest':
-                if(!$request->self){
-                    $user = User::where([
-                        'email_address' => $request->email_address
-                    ])->first();
+                if(isset($request->username)){
+                    $curr_user = Account::with('admin')
+                        ->where('username', $request->username)
+                        ->first();
+
+                    $user = User::where('email_address', $request->email_address)
+                    ->where('email_address', '!=', $curr_user->user->email_address ?? null)
+                    ->first();
                 }
                 else {
                     $curr_user = Account::with('user')
@@ -276,10 +336,10 @@ class AccountsController extends Controller
 
     public function checkUsername(Request $request)
     {
-        if(!$request->self){
-            $user = Account::where([
-                'username' => $request->username
-            ])->first();
+        if(isset($request->old_username)){
+            $user = Account::where('username', $request->username)
+                ->where('username', '!=', $request->old_username)
+                ->first();
         }
         else {
             $user = Account::where('username', $request->username)
