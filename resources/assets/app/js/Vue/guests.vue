@@ -35,7 +35,7 @@
                         </template>
                         <template #cell(actions)="row">
                             <div class="d-flex justify-content-center">
-                                <b-button variant="success" class="rounded-lg mx-1" size="sm" title="Update Record" @click="open_guest_modal(false, row.item)" v-b-tooltip.hover.noninteractive>
+                                <b-button variant="success" class="rounded-lg mx-1" size="sm" title="View / Update Record" @click="open_guest_modal(false, row.item)" v-b-tooltip.hover.noninteractive>
                                     <i class="fa fa-edit"></i>
                                 </b-button>
                                 <b-button variant="primary" class="rounded-lg mx-1" size="sm" title="Delete Record" @click="delete_guest(row.item.account_id)" v-b-tooltip.hover.noninteractive>
@@ -48,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <b-modal id="guest_modal" :title="(modal_new ? 'New' : 'Update') + ' Guest Record'" centered scrollable no-close-on-backdrop>
+        <b-modal id="guest_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Guest Record'" centered scrollable no-close-on-backdrop>
             <b-overlay :show="modalIsBusy" opacity="0.3">
                 <b-container fluid>
                     <div class="d-flex justify-content-center mb-4">

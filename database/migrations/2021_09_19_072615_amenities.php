@@ -23,6 +23,7 @@ class Amenities extends Migration
         Schema::create('amenities', function (Blueprint $table) {
             $table->id('amenities_id');
             $table->integer('category_id');
+            $table->string('amenities_name');
             $table->string('description');
             $table->timestamps();
         });

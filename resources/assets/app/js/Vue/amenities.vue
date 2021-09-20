@@ -12,7 +12,7 @@
                             <b-button variant="primary" class="rounded-circle" title="Refresh" v-b-tooltip.hover.noninteractive @click="getAllAmenities">
                                 <i :class="'fa fa-refresh' + (table.isBusy ? ' fa-spin' : '')"></i>
                             </b-button>
-                            <b-button variant="secondary" class="rounded-circle" title="Refresh" v-b-tooltip.hover.noninteractive @click="isAmenities = false">
+                            <b-button variant="secondary" class="rounded-circle" title="Manage Amenities Categories" v-b-tooltip.hover.noninteractive @click="isAmenities = false">
                                 <i class="fa fa-cog"></i>
                             </b-button>
                         </div>
@@ -32,17 +32,17 @@
                                 {{ row.item.amenities_name }}
                             </template>
                             <template #cell(email_address)="row">
-                                {{ row.item.category.category_name }}
+                                {{ row.item.category_name }}
                             </template>
                             <template #cell(position)="row">
                                 {{ row.item.description }}
                             </template>
                             <template #cell(actions)="row">
                                 <div class="d-flex justify-content-center">
-                                    <b-button variant="success" class="rounded-lg mx-1" size="sm" title="Update Record" @click="open_amenities_modal(false, row.item)" v-b-tooltip.hover.noninteractive>
+                                    <b-button variant="success" class="rounded-lg mx-1" size="sm" title="View / Update Record" @click="open_amenities_modal(false, row.item)" v-b-tooltip.hover.noninteractive>
                                         <i class="fa fa-edit"></i>
                                     </b-button>
-                                    <b-button variant="primary" class="rounded-lg mx-1" size="sm" title="Delete Record" @click="delete_amenities(row.item.account_id)" v-b-tooltip.hover.noninteractive>
+                                    <b-button variant="primary" class="rounded-lg mx-1" size="sm" title="Delete Record" @click="delete_amenities(row.item.amenities_id)" v-b-tooltip.hover.noninteractive>
                                         <i class="fa fa-trash"></i>
                                     </b-button>
                                 </div>
@@ -52,7 +52,7 @@
                     </div>
                 </div>
             </div>
-            <b-modal id="amenities_modal" :title="(modal_new ? 'New' : 'Update') + ' Amenities Record'" centered scrollable no-close-on-backdrop>
+            <b-modal id="amenities_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Amenities Record'" centered scrollable no-close-on-backdrop>
                 <b-overlay :show="modalIsBusy" opacity="0.3">
                     <b-container fluid>
                         <div class="d-flex justify-content-center mb-4">
@@ -69,7 +69,7 @@
                                 <b-form-select class="form-control rounded-pill" v-model="amenities_info.category_name" :options="category_name_options" @change="is_valid('category_name')"></b-form-select>
                                 <span class="text-danger i-label" v-if="valid.category_name">{{ valid.category_name }}</span>
                             </b-form-group>
-                            <b-form-group label="Amenities Category *">
+                            <b-form-group label="Amenities Description *">
                                 <div class="border p-2 text-area-wrapper">
                                     <b-form-textarea class="border-0" v-model="amenities_info.description" rows="3" @keyup="is_valid('description')"></b-form-textarea>
                                 </div>
@@ -87,7 +87,7 @@
             </b-modal>
             <alert id="amenities_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>
         </div>
-        <amenities-categories class="w-100" @backtoamenities="isAmenities = true" v-else></amenities-categories>
+        <amenities-categories class="w-100" @backtoamenities="show_amenities" v-else></amenities-categories>
     </div>
 </template>
 
@@ -104,7 +104,8 @@ export default {
     data() {
         return {
             isAmenities: true,
-            all_accounts: '',
+            all_amenities: [],
+            all_amenities_categories: [],
             table: {
                 current_page: 1,
                 filter: '',
@@ -136,6 +137,7 @@ export default {
             },
             modal_new: true,
             amenities_info: {
+                amenities_id: -1,
                 amenities_name: '',
                 category_name: '',
                 description: ''
@@ -165,9 +167,7 @@ export default {
         async getAllAmenities() {
             this.table.isBusy = true
 
-            this.all_accounts = await axios.post('/api/accounts/allAccounts', {
-                    user_role: 'amenities'
-                })
+            this.all_amenities = await axios.get('/api/amenities/allAmenities')
                 .then(function (resp){
                     return resp.data
                 })
@@ -177,16 +177,31 @@ export default {
 
             this.table.items = []
 
-            this.all_accounts.forEach((item) => {
-                var account = item.admin
+            this.all_amenities.forEach((item) => {
+                var amenities = item
 
-                account['account_id'] = item.account_id
-                account['username'] = item.username
+                amenities['category_name'] = item.category.category_name
 
-                this.table.items.push(account)
+                this.table.items.push(amenities)
             })
 
             this.table.isBusy = false
+        },
+
+        async getAllAmenitiesCategory() {
+            this.all_amenities_categories = await axios.get('/api/amenities_category/allAmenitiesCategories')
+                .then(function (resp){
+                    return resp.data
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+
+            this.category_name_options = ['Select Amenities Category']
+
+            this.all_amenities_categories.forEach((item) => {
+                this.category_name_options.push(item.category_name)
+            })
         },
 
         is_valid(field) {
@@ -217,6 +232,7 @@ export default {
             if(is_new) {
                 this.modal_new = true
 
+                this.amenities_info.amenities_id = -1
                 this.amenities_info.amenities_name = ''
                 this.amenities_info.category_name = 'Select Amenities Category'
                 this.amenities_info.description = ''
@@ -230,8 +246,9 @@ export default {
             else {
                 this.modal_new = false
 
+                this.amenities_info.amenities_id = amenities.amenities_id
                 this.amenities_info.amenities_name = amenities.amenities_name
-                this.amenities_info.category_name = amenities.category.category_name
+                this.amenities_info.category_name = amenities.category_name
                 this.amenities_info.description = amenities.description
 
                 this.$bvModal.show('amenities_modal')
@@ -257,7 +274,7 @@ export default {
 
             this.modalIsBusy = true
 
-            var _amenities_response = await axios.post('/api/accounts/' + (this.modal_new ? 'create' : 'updateProfile'),
+            var _amenities_response = await axios.post('/api/amenities/' + (this.modal_new ? 'create' : 'update'),
                     this.amenities_info
                 )
                 .then((resp) => {
@@ -270,15 +287,9 @@ export default {
                         this.$bvModal.hide('amenities_modal')
                         this.$bvModal.hide('amenities_alert')
 
-                        this.amenities_info.first_name = ''
-                        this.amenities_info.last_name = ''
-                        this.amenities_info.middle_name = ''
-                        this.amenities_info.email_address = ''
-                        this.amenities_info.mobile_number = ''
-                        this.amenities_info.position = 'Select Position'
-                        this.amenities_info.username = ''
-                        this.amenities_info.password = ''
-                        this.amenities_info.password_confirmation = ''
+                        this.amenities_info.amenities_name == ''
+                        this.amenities_info.category_name == 'Select Amenities Category'
+                        this.amenities_info.description == ''
 
                         this.getAllAmenities()
                     }
@@ -292,13 +303,13 @@ export default {
                 })
         },
 
-        delete_amenities(account_id) {
+        delete_amenities(amenities_id) {
             this.alert.confirm = true
             this.alert.message = 'Delete Amenities record?'
 
             this.alert.okClicked = async () => {
-                var delete_amenities_response = await axios.post('/api/accounts/delete', {
-                        account_id: account_id
+                var delete_amenities_response = await axios.post('/api/amenities/delete', {
+                        amenities_id: amenities_id
                     })
                     .then((resp) => {
                         this.modalIsBusy = false
@@ -325,11 +336,18 @@ export default {
             }
 
             this.$bvModal.show('amenities_alert')
+        },
+
+        show_amenities() {
+            this.isAmenities = true
+            this.getAllAmenities()
+            this.getAllAmenitiesCategory()
         }
     },
 
     mounted() {
         this.getAllAmenities()
+        this.getAllAmenitiesCategory()
     }
 }
 </script>

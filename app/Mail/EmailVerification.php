@@ -47,7 +47,9 @@ class EmailVerification extends Mailable
                 break;
         }
 
-        return $view->with('token', $this->token);
+        return $view->with(array(
+            'token' => $this->token
+        ));
     }
 }
 

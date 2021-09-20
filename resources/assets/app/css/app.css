@@ -12,7 +12,7 @@ th:last-child {
     width: 160px !important;
 }
 
-.text-area-wrapper {
+.text-area-wrapper, .b-form-tags {
     border-radius: 1rem;
 }
 

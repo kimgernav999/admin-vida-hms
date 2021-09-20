@@ -2,8 +2,13 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\VerifyCsrfToken;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\TokenController;
+use App\Http\Controllers\AmenitiesController;
+use App\Http\Controllers\AmenitiesCategoryController;
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,4 +40,32 @@ Route::prefix('token')->group(function () {
     Route::post('{type}/create', [TokenController::class, 'createToken']);
     Route::get('verifyToken', [TokenController::class, 'verifyToken']);
     Route::post('updatePassword', [TokenController::class, 'updatePassword']);
+});
+
+Route::prefix('amenities_category')->group(function () {
+    Route::post('create', [AmenitiesCategoryController::class, 'create']);
+    Route::post('update', [AmenitiesCategoryController::class, 'update']);
+    Route::post('delete', [AmenitiesCategoryController::class, 'delete']);
+    Route::get('allAmenitiesCategories', [AmenitiesCategoryController::class, 'allAmenitiesCategories']);
+});
+
+Route::prefix('amenities')->group(function () {
+    Route::post('create', [AmenitiesController::class, 'create']);
+    Route::post('update', [AmenitiesController::class, 'update']);
+    Route::post('delete', [AmenitiesController::class, 'delete']);
+    Route::get('allAmenities', [AmenitiesController::class, 'allAmenities']);
+});
+
+Route::prefix('rooms')->group(function () {
+    Route::post('create', [RoomController::class, 'create']);
+    Route::post('update', [RoomController::class, 'update']);
+    Route::post('delete', [RoomController::class, 'delete']);
+    Route::get('allRooms', [RoomController::class, 'allRooms']);
+});
+
+Route::prefix('roomtypes')->group(function () {
+    Route::post('create', [RoomTypeController::class, 'create']);
+    Route::post('update', [RoomTypeController::class, 'update']);
+    Route::post('delete', [RoomTypeController::class, 'delete']);
+    Route::get('allRoomTypes', [RoomTypeController::class, 'allRoomTypes']);
 });
