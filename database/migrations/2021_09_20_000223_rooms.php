@@ -25,11 +25,13 @@ class Rooms extends Migration
             $table->integer('room_type_id');
             $table->string('room_name');
             $table->string('description');
+            $table->longText('amenities'); // { 'amenities_id': '', amenities_name: '' }
             $table->integer('room_rate');
             $table->integer('max_adult');
             $table->integer('max_child');
             $table->integer('adult_extra_rate');
             $table->integer('child_extra_rate');
+            $table->longText('image_ids');
             $table->timestamps();
         });
     }

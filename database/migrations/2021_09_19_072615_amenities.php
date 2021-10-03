@@ -25,6 +25,7 @@ class Amenities extends Migration
             $table->integer('category_id');
             $table->string('amenities_name');
             $table->string('description');
+            $table->text('image_ids');
             $table->timestamps();
         });
     }

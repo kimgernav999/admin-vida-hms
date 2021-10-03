@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link href="http://fonts.cdnfonts.com/css/segoe-ui-4" rel="stylesheet">
+        {{-- <link href="http://fonts.cdnfonts.com/css/segoe-ui-4" rel="stylesheet"> --}}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.css">
         <link rel="stylesheet" href="https://unpkg.com/bootstrap-vue@2.21.2/dist/bootstrap-vue.css">
         <link rel="stylesheet" href="{{ asset('assets/app/css/app.css') }}">

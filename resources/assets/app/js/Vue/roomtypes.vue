@@ -50,7 +50,7 @@
                 </div>
             </div>
         </div>
-        <b-modal id="roomtypes_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Room Type Record'" centered scrollable no-close-on-backdrop>
+        <b-modal id="roomtypes_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Room Type Record'" centered scrollable no-close-on-backdrop hide-header-close>
             <b-overlay :show="modalIsBusy" opacity="0.3">
                 <b-container fluid>
                     <div class="d-flex justify-content-center mb-4">
@@ -74,7 +74,7 @@
             </b-overlay>
             <template #modal-footer>
                 <div class="d-flex justify-content-center w-100">
-                    <b-button class="m-2 w-50" size="sm" variant="danger" @click="$bvModal.hide('roomtypes_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
+                    <b-button class="m-2 w-50" size="sm" variant="danger" @click="discard_changes('roomtypes_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
                     <b-button class="m-2 w-50" size="sm" variant="primary" @click="save_roomtypes()" :disabled="modalIsBusy" block pill>Done</b-button>
                 </div>
             </template>
@@ -93,6 +93,7 @@ export default {
 
     data() {
         return {
+            isModified: false,
             all_rooms_categories: '',
             table: {
                 current_page: 1,
@@ -161,6 +162,8 @@ export default {
         },
 
         is_valid(field) {
+            this.isModified = true
+
             var regex_name = /^.{3,}$/
             var regex_description = /^.{10,}$/
 
@@ -181,6 +184,8 @@ export default {
         },
 
         open_roomtypes_modal(is_new, roomtypes = null) {
+            this.isModified = false
+
             if(is_new) {
                 this.modal_new = true
 
@@ -245,7 +250,7 @@ export default {
 
                     return resp.data.message
                 })
-                .then((err) => {
+                .catch((err) => {
                     console.log(err)
                 })
         },
@@ -273,7 +278,7 @@ export default {
 
                         return resp.data.message
                     })
-                    .then((err) => {
+                    .catch((err) => {
                         console.log(err)
                     })
             }
@@ -283,6 +288,27 @@ export default {
             }
 
             this.$bvModal.show('roomtypes_alert')
+        },
+
+        discard_changes(modal_id){
+            if(this.isModified){
+                this.alert.confirm = true
+                this.alert.message = 'Discard Changes?'
+
+                this.alert.okClicked = () => {
+                    this.$bvModal.hide(modal_id)
+                    this.$bvModal.hide('roomtypes_alert')
+                }
+
+                this.alert.cancelClicked = () => {
+                    this.$bvModal.hide('roomtypes_alert')
+                }
+
+                this.$bvModal.show('roomtypes_alert')
+            }
+            else {
+                this.$bvModal.hide(modal_id)
+            }
         }
     },
 

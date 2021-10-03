@@ -87,7 +87,7 @@
                 </div>
             </b-overlay>
         </div>
-        <b-modal id="emailVerify" centered scrollable no-close-on-backdrop hide-header hide-footer>
+        <b-modal id="emailVerify" centered scrollable no-close-on-backdrop hide-header-close hide-header hide-footer>
             Test
         </b-modal>
         <alert id="signup_alert" :visible="alert.show" :title="alert.title" :confirm="alert.confirm" :message="alert.message" :okText="alert.okText" :cancelText="alert.cancelText" :okClicked="alert.okClicked" :cancelClicked="alert.cancelClicked"></alert>

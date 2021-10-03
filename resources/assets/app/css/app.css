@@ -41,6 +41,11 @@ th:last-child {
     padding: 8px 15px !important;
 }
 
+.modal-title {
+    text-align: center !important;
+    width: 100%;
+}
+
 .r-left {
     border: solid 1px lightgray !important;
     border-right: 0px !important;
@@ -59,4 +64,23 @@ th:last-child {
     border-left: 0px !important;
     border-top-right-radius: 10rem !important;
     border-bottom-right-radius: 10rem !important;
+}
+
+.result_table {
+    background-color:#FDFDFD;
+    border: solid 1px lightgray;
+    border-radius: 8px;
+    font-size: 13px;
+    position: absolute;
+    top: 35px;
+    width: 100%;
+}
+
+.result_table .table-responsive {
+    margin: 0;
+    border: 0 !important;
+}
+
+.result_table th {
+    display: none;
 }

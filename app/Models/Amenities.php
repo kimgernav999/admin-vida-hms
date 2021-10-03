@@ -16,7 +16,8 @@ class Amenities extends Model
     protected $fillable = [
         'amenities_name',
         'category_id',
-        'description'
+        'description',
+        'image_ids'
     ];
 
     public function category() {

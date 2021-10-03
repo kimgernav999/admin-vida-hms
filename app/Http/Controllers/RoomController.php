@@ -19,7 +19,9 @@ class RoomController extends Controller
             'max_adult' => $request->max_adult,
             'max_child' => $request->max_child,
             'adult_extra_rate' => $request->adult_extra_rate,
-            'child_extra_rate' => $request->child_extra_rate
+            'child_extra_rate' => $request->child_extra_rate,
+            'amenities' => json_encode($request->amenities),
+            'image_ids' => json_encode($request->image_ids)
         ]);
 
         $message = $room ? 'Room record saved!' : 'Room record save failed!';
@@ -41,6 +43,8 @@ class RoomController extends Controller
         $room->max_child = $request->max_child;
         $room->adult_extra_rate = $request->adult_extra_rate;
         $room->child_extra_rate = $request->child_extra_rate;
+        $room->amenities = json_encode($request->amenities);
+        $room->image_ids = json_encode($request->image_ids);
         $message = $room->save() ? 'Room record updated!' : 'Room record update failed!';
         return response(
             array(

@@ -9,6 +9,8 @@ use App\Http\Controllers\AmenitiesController;
 use App\Http\Controllers\AmenitiesCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomTypeController;
+use App\Http\Controllers\OffersController;
+use App\Http\Controllers\AttachmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,4 +70,17 @@ Route::prefix('roomtypes')->group(function () {
     Route::post('update', [RoomTypeController::class, 'update']);
     Route::post('delete', [RoomTypeController::class, 'delete']);
     Route::get('allRoomTypes', [RoomTypeController::class, 'allRoomTypes']);
+});
+
+Route::prefix('offers')->group(function () {
+    Route::post('create', [OffersController::class, 'create']);
+    Route::post('update', [OffersController::class, 'update']);
+    Route::post('delete', [OffersController::class, 'delete']);
+    Route::get('allOffers', [OffersController::class, 'allOffers']);
+});
+
+Route::prefix('attachments')->group(function () {
+    Route::post('create', [AttachmentController::class, 'create']);
+    Route::get('delete', [AttachmentController::class, 'delete']);
+    Route::get('viewDetails', [AttachmentController::class, 'viewDetails']);
 });

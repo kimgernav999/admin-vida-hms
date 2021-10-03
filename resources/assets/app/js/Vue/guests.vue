@@ -48,7 +48,7 @@
                 </div>
             </div>
         </div>
-        <b-modal id="guest_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Guest Record'" centered scrollable no-close-on-backdrop>
+        <b-modal id="guest_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Guest Record'" centered scrollable no-close-on-backdrop hide-header-close>
             <b-overlay :show="modalIsBusy" opacity="0.3">
                 <b-container fluid>
                     <div class="d-flex justify-content-center mb-4">
@@ -118,7 +118,7 @@
             </b-overlay>
             <template #modal-footer>
                 <div class="d-flex justify-content-center w-100">
-                    <b-button class="m-2 w-50" size="sm" variant="danger" @click="$bvModal.hide('guest_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
+                    <b-button class="m-2 w-50" size="sm" variant="danger" @click="discard_changes('guest_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
                     <b-button class="m-2 w-50" size="sm" variant="primary" @click="save_guest()" :disabled="modalIsBusy" block pill>Done</b-button>
                 </div>
             </template>
@@ -137,6 +137,7 @@ export default {
 
     data() {
         return {
+            isModified: false,
             all_accounts: '',
             table: {
                 current_page: 1,
@@ -241,6 +242,8 @@ export default {
         },
 
         is_valid(field) {
+            this.isModified = true
+
             var regex_name = /^.{2,}$/
             var regex_email = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             var regex_unamelength = /^.{6,}$/
@@ -322,6 +325,8 @@ export default {
         },
 
         open_guest_modal(is_new, account = null) {
+            this.isModified = false
+
             if(is_new) {
                 this.modal_new = true
 
@@ -436,7 +441,7 @@ export default {
 
                     return resp.data.message
                 })
-                .then((err) => {
+                .catch((err) => {
                     console.log(err)
                 })
         },
@@ -464,7 +469,7 @@ export default {
 
                         return resp.data.message
                     })
-                    .then((err) => {
+                    .catch((err) => {
                         console.log(err)
                     })
             }
@@ -474,6 +479,27 @@ export default {
             }
 
             this.$bvModal.show('guests_alert')
+        },
+
+        discard_changes(modal_id){
+            if(this.isModified){
+                this.alert.confirm = true
+                this.alert.message = 'Discard Changes?'
+
+                this.alert.okClicked = () => {
+                    this.$bvModal.hide(modal_id)
+                    this.$bvModal.hide('guests_alert')
+                }
+
+                this.alert.cancelClicked = () => {
+                    this.$bvModal.hide('guests_alert')
+                }
+
+                this.$bvModal.show('guests_alert')
+            }
+            else {
+                this.$bvModal.hide(modal_id)
+            }
         }
     },
 

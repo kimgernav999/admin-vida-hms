@@ -34,7 +34,7 @@
                             <template #cell(email_address)="row">
                                 {{ row.item.room_type_name }}
                             </template>
-                            <template #cell(position)="row">
+                            <template #cell(description)="row">
                                 {{ row.item.description }}
                             </template>
                             <template #cell(actions)="row">
@@ -52,13 +52,39 @@
                     </div>
                 </div>
             </div>
-            <b-modal id="room_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Room Record'" centered scrollable no-close-on-backdrop>
+            <b-modal id="room_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Room Record'" centered scrollable no-close-on-backdrop hide-header-close>
                 <b-overlay :show="modalIsBusy" opacity="0.3">
                     <b-container fluid>
                         <div class="d-flex justify-content-center mb-4">
                             <i class="fa fa-building-o my-3" style="font-size: 120px;"></i>
                         </div>
                         <b-form class="my-3">
+                            <input class="d-none" type="file" accept="image/*" @change="onFileChange" ref="add_img" multiple />
+                            <div class="d-flex">
+                                <h6 class="mt-1 text-success font-weight-bold text-black-70 text-black-70">Room Preview Images</h6>
+                                <b-button class="ml-auto rounded-circle" variant="primary" size="sm" @click="$refs.add_img.click()" title="Upload Image(s)" v-b-tooltip.hover.non-interactive>
+                                    <i class="fa fa-plus"></i>
+                                </b-button>
+                            </div>
+                            <div class="mt-3 mb-5" v-if="images.length == 0">
+                                <h6 class="text-secondary font-weight-bold text-center">No Images Uploaded</h6>
+                                <span class="text-danger i-label" v-if="valid.images">{{ valid.images }}</span>
+                            </div>
+                            <div class="mt-3 mb-5" v-else>
+                                <b-overlay class="preview-carousel" opacity="0.9" :show="reloading">
+                                    <b-carousel v-model="slide" background="#ababab" style="text-shadow: 1px 1px 2px #333;" :fade="images.length > 1" :controls="images.length > 1" :indicators="images.length > 1">
+                                        <b-carousel-slide class="d-flex justify-content-center py-2" v-for="(image, key) in images" :key="key">
+                                            <template #img>
+                                                <img class="d-block rounded" height="240" :src="'/storage/uploads/' + image.file_name" :alt="image.file_name" :id="'slide_' + image.attachment_id" @mouseenter="show_delete_btn = true" @mouseleave="show_delete_btn = false">
+                                                <b-button :class="'rounded-circle delete-btn' + (!show_delete_btn ? ' transparent' : '')" variant="danger" size="sm" title="Remove Image" @click="delete_img(image.attachment_id)" @mouseenter="show_delete_btn = true" @mouseleave="show_delete_btn = false" v-b-tooltip.hover.non-interactive>
+                                                    <i class="fa fa-trash"></i>
+                                                </b-button>
+                                            </template>
+                                        </b-carousel-slide>
+                                    </b-carousel>
+                                </b-overlay>
+                                <span class="text-danger i-label" v-if="valid.images">{{ valid.images }}</span>
+                            </div>
                             <h6 class="text-success font-weight-bold text-black-70 text-black-70">Room Information</h6>
                             <div class="font-weight-lighter ml-2 mb-3 text-danger w-100" style="font-size: 9px;">* Required Field</div>
                             <b-form-group label="Room Name *">
@@ -96,14 +122,24 @@
                                 </b-form-group>
                             </b-form-row>
                             <b-form-group label="Room Amenities *">
-                                <!-- {{tag_input}} -->
                                 <b-form-tags v-model="room_info.amenities" tag-variant="primary" no-outer-focus class="mb-2">
                                     <template v-slot="{ tags, inputAttrs, inputHandlers, tagVariant, addTag, removeTag }">
                                         <b-input-group class="mb-2">
-                                            <b-form-input class="form-control r-left" v-bind="inputAttrs" v-model="tag_input" v-on="inputHandlers" placeholder="Enter to Add Amenities"></b-form-input>
+                                            <b-form-input class="d-none" v-bind="inputAttrs" v-on="inputHandlers" ref="text_tag"></b-form-input>
+                                            <b-form-input class="form-control r-left" v-model="result.filter" @keyup="getAllAmenities" placeholder="Enter to Add Amenities"></b-form-input>
                                             <b-input-group-append>
-                                                <b-button class="pr-3 r-right" @click="addTag()" variant="primary">Add</b-button>
+                                                <b-button class="pr-3 r-right" @click="reset_tag_input(addTag)" variant="primary" :disabled="!result_selected">Add</b-button>
                                             </b-input-group-append>
+                                            <div class="mt-2 result_table" v-if="result.filter.length > 2 & !result_selected">
+                                                <b-table class="border-bottom vw-75" :busy="result.isBusy" :fields="result.fields" :filter="result.filter" :filter-included-fields="result.filter_on" :current-page="result.current_page" :items="result.items" @row-clicked="result_clicked" striped responsive show-empty>
+                                                    <template #table-busy>
+                                                        <div class="text-center text-danger my-2">
+                                                            <i class="fa fa-spinner fa-10x align-middle"></i>
+                                                            <strong>Loading...</strong>
+                                                        </div>
+                                                    </template>
+                                                </b-table>
+                                            </div>
                                         </b-input-group>
                                         <div class="d-block text-center" style="font-size: 1rem;" v-if="room_info.amenities.length == 0">
                                             <span style="font-size: 0.8rem;">No Amenities</span>
@@ -125,7 +161,7 @@
                 </b-overlay>
                 <template #modal-footer>
                     <div class="d-flex justify-content-center w-100">
-                        <b-button class="m-2 w-50" size="sm" variant="danger" @click="$bvModal.hide('room_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
+                        <b-button class="m-2 w-50" size="sm" variant="danger" @click="discard_changes('room_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
                         <b-button class="m-2 w-50" size="sm" variant="primary" @click="save_room()" :disabled="modalIsBusy" block pill>Done</b-button>
                     </div>
                 </template>
@@ -148,9 +184,14 @@ export default {
 
     data() {
         return {
+            isModified: false,
             isRoom: true,
             all_rooms: [],
             all_room_types: [],
+            all_amenities: [],
+            images: [],
+            images_to_delete: [],
+            slide: 0,
             table: {
                 current_page: 1,
                 filter: '',
@@ -180,8 +221,25 @@ export default {
                 items: [],
                 per_page: 6
             },
+            result: {
+                current_page: 1,
+                filter: '',
+                filter_on: ['amenities_name', 'description'],
+                fields: [
+                    {
+                        key: 'amenities_name',
+                        label: 'Room Type',
+                        sortable: true
+                    }
+                ],
+                items: [],
+                per_page: 6
+            },
+            result_selected: false,
             tag_input: '',
             modal_new: true,
+            show_delete_btn: false,
+            reloading: false,
             room_info: {
                 room_id: -1,
                 room_type_name: 'Select Room Type',
@@ -192,7 +250,8 @@ export default {
                 max_child: 0,
                 adult_extra_rate: 0,
                 child_extra_rate: 0,
-                amenities: []
+                amenities: [],
+                image_ids: []
             },
             room_type_name_options: ['Select Room Type'],
             valid: {
@@ -203,7 +262,8 @@ export default {
                 max_adult: '',
                 max_child: '',
                 adult_extra_rate: '',
-                child_extra_rate: ''
+                child_extra_rate: '',
+                images: ''
             },
             isBusy: false,
             modalIsBusy: false,
@@ -261,9 +321,36 @@ export default {
             })
         },
 
+        async getAllAmenities() {
+            this.all_amenities = await axios.get('/api/amenities/allAmenities')
+                .then(function (resp){
+                    return resp.data
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+
+            this.result.items = this.all_amenities
+
+            this.result_selected = false
+        },
+
+        result_clicked(item){
+            this.result.filter = item.amenities_name
+            this.result_selected = true
+            this.$refs.text_tag.$el.value = item.amenities_name
+        },
+
+        reset_tag_input(addTag) {
+            addTag(this.result.filter)
+            this.result.filter = ''
+        },
+
         is_valid(field) {
             var regex_name = /^.{3,}$/
             var regex_description = /^.{10,}$/
+
+            this.isModified = true
 
             switch (field) {
                 case 'room_name':
@@ -311,6 +398,8 @@ export default {
         },
 
         open_room_modal(is_new, room = null) {
+            this.isModified = false
+
             if(is_new) {
                 this.modal_new = true
 
@@ -323,6 +412,9 @@ export default {
                 this.room_info.max_child = 0
                 this.room_info.adult_extra_rate = 0
                 this.room_info.child_extra_rate = 0
+                this.room_info.amenities = []
+                this.room_info.image_ids = []
+                this.images = []
 
                 this.valid.room_type_name = ''
                 this.valid.room_name = ''
@@ -332,6 +424,7 @@ export default {
                 this.valid.max_child = ''
                 this.valid.adult_extra_rate = ''
                 this.valid.child_extra_rate = ''
+                this.valid.images = ''
 
                 this.$bvModal.show('room_modal')
             }
@@ -347,6 +440,25 @@ export default {
                 this.room_info.max_child = room.max_child
                 this.room_info.adult_extra_rate = room.adult_extra_rate
                 this.room_info.child_extra_rate = room.child_extra_rate
+                this.room_info.amenities = JSON.parse(room.amenities)
+
+                this.images = []
+
+                this.room_info.image_ids = JSON.parse(room.image_ids)
+
+                this.room_info.image_ids.forEach(async (attachment_id) => {
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                })
+
+                this.images_to_delete = []
 
                 this.$bvModal.show('room_modal')
             }
@@ -362,7 +474,11 @@ export default {
                             !(this.valid.adult_extra_rate !=  '') &&
                             !(this.valid.child_extra_rate !=  '')
 
-            if(!all_valid) {
+            var images_valid = this.images.length >= 2
+
+            if(!(all_valid && images_valid)) {
+                this.valid.images = !images_valid ? 'Please upload at least 2 images' : ''
+
                 this.alert.confirm = false
                 this.alert.message = 'Please fill all the required fields!'
 
@@ -375,6 +491,12 @@ export default {
             }
 
             this.modalIsBusy = true
+
+            this.room_info.image_ids = []
+
+            this.images.forEach((image) => {
+                this.room_info.image_ids.push(image.attachment_id)
+            })
 
             var _room_response = await axios.post('/api/rooms/' + (this.modal_new ? 'create' : 'update'),
                     this.room_info
@@ -398,6 +520,7 @@ export default {
                         this.room_info.max_child = 0
                         this.room_info.adult_extra_rate = 0
                         this.room_info.child_extra_rate = 0
+                        this.room_info.image_ids = []
 
                         this.valid.room_type_name = ''
                         this.valid.room_name = ''
@@ -407,6 +530,7 @@ export default {
                         this.valid.max_child = ''
                         this.valid.adult_extra_rate = ''
                         this.valid.child_extra_rate = ''
+                        this.valid.images = ''
 
                         this.getAllRoom()
                     }
@@ -415,8 +539,22 @@ export default {
 
                     return resp.data.message
                 })
-                .then((err) => {
+                .catch((err) => {
                     console.log(err)
+                })
+
+            this.images_to_delete.forEach(async (attachment_id) => {
+                    var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+
+                    this.images.forEach((image) => {
+                        if(image.attachment_id = attachment_id) this.images.pop(image)
+                    })
                 })
         },
 
@@ -425,6 +563,20 @@ export default {
             this.alert.message = 'Delete Room record?'
 
             this.alert.okClicked = async () => {
+                this.room_info.image_ids.forEach(async (attachment_id) => {
+                        var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+
+                        this.images.forEach((image) => {
+                            if(image.attachment_id = attachment_id) this.images.pop(image)
+                        })
+                    })
+
                 var delete_room_response = await axios.post('/api/rooms/delete', {
                         room_id: room_id
                     })
@@ -443,13 +595,13 @@ export default {
 
                         return resp.data.message
                     })
-                    .then((err) => {
+                    .catch((err) => {
                         console.log(err)
                     })
             }
 
             this.alert.cancelClicked = () => {
-                this.$bvModal.hide('room_alert')
+               this.$bvModal.hide('room_alert')
             }
 
             this.$bvModal.show('room_alert')
@@ -459,14 +611,105 @@ export default {
             this.isRoom = true
             this.getAllRoom()
             this.getAllRoomType()
-        }
-    },
+        },
 
-    computed: {
-        tags_amenities() {
-            var tag_input = document.querySelector('input#tags_amenities')
-            console.log(tag_input)
-            // return tag_input ? tag_input.value : null
+        onFileChange(e) {
+            var selectedFiles = e.target.files
+
+            this.isModified = true
+            this.reloading = true
+
+            setTimeout(async () => {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    var f_data = new FormData()
+
+                    f_data.append('image', selectedFiles[i])
+
+                    var upload_img_response = await axios.post('/api/attachments/create', f_data)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + upload_img_response)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+
+                this.$refs.add_img.files = null
+
+                this.reloading = false
+            }, 800);
+        },
+
+        delete_img(attachment_id) {
+            this.isModified = true
+            this.reloading = true
+
+            setTimeout(async () => {
+                if(this.modal_new) {
+                    var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+                else {
+                    this.images_to_delete.push(attachment_id)
+                    this.room_info.image_ids.pop(attachment_id)
+                }
+
+                this.images.forEach((image, index) => {
+                    if(image.attachment_id = attachment_id) this.images.pop(this.images[index])
+                })
+
+                this.images = []
+
+                this.room_info.image_ids.forEach(async (attachment_id) => {
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                })
+
+                this.reloading = false
+            }, 800);
+        },
+
+        discard_changes(modal_id){
+            if(this.isModified){
+                this.alert.confirm = true
+                this.alert.message = 'Discard Changes?'
+
+                this.alert.okClicked = () => {
+                    this.$bvModal.hide(modal_id)
+                    this.$bvModal.hide('room_alert')
+                }
+
+                this.alert.cancelClicked = () => {
+                    this.$bvModal.hide('room_alert')
+                }
+
+                this.$bvModal.show('room_alert')
+            }
+            else {
+                this.$bvModal.hide(modal_id)
+            }
         }
     },
 
@@ -489,5 +732,18 @@ export default {
 
     .separator-lightgray {
         border-bottom: solid 1px lightgray;
+    }
+
+    .preview-carousel {
+        height: 256px;
+    }
+
+    .delete-btn {
+        position: absolute;
+        bottom: 40px;
+    }
+
+    .transparent {
+        opacity: 30%;
     }
 </style>

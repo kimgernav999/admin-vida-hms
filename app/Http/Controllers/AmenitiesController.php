@@ -14,7 +14,8 @@ class AmenitiesController extends Controller
         $amenities = Amenities::create([
             'amenities_name' => $request->amenities_name,
             'category_id' => $category->category_id,
-            'description' => $request->description
+            'description' => $request->description,
+            'image_ids' => json_encode($request->image_ids)
         ]);
 
         $message = $amenities ? 'Amenities record saved!' : 'Amenities record save failed!';
@@ -31,6 +32,7 @@ class AmenitiesController extends Controller
         $amenities->amenities_name = $request->amenities_name;
         $amenities->category_id = $category->category_id;
         $amenities->description = $request->description;
+        $amenities->image_ids = json_encode($request->image_ids);
         $message = $amenities->save() ? 'Amenities record updated!' : 'Amenities record update failed!';
         return response(
             array(

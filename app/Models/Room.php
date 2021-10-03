@@ -21,7 +21,9 @@ class Room extends Model
         'max_adult',
         'max_child',
         'adult_extra_rate',
-        'child_extra_rate'
+        'child_extra_rate',
+        'amenities',
+        'image_ids'
     ];
 
     public function type() {

@@ -52,13 +52,39 @@
                     </div>
                 </div>
             </div>
-            <b-modal id="amenities_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Amenities Record'" centered scrollable no-close-on-backdrop>
+            <b-modal id="amenities_modal" :title="(modal_new ? 'New' : 'View / Update') + ' Amenities Record'" centered scrollable no-close-on-backdrop hide-header-close>
                 <b-overlay :show="modalIsBusy" opacity="0.3">
                     <b-container fluid>
                         <div class="d-flex justify-content-center mb-4">
                             <i class="fa fa-bullseye my-3" style="font-size: 120px;"></i>
                         </div>
                         <b-form class="my-3" @keydown.enter="save_amenities()">
+                            <input class="d-none" type="file" accept="image/*" @change="onFileChange" ref="add_img" multiple />
+                            <div class="d-flex">
+                                <h6 class="mt-1 text-success font-weight-bold text-black-70 text-black-70">Amenities Preview Images</h6>
+                                <b-button class="ml-auto rounded-circle" variant="primary" size="sm" @click="$refs.add_img.click()" title="Upload Image(s)" v-b-tooltip.hover.non-interactive>
+                                    <i class="fa fa-plus"></i>
+                                </b-button>
+                            </div>
+                            <div class="mt-3 mb-5" v-if="images.length == 0">
+                                <h6 class="text-secondary font-weight-bold text-center">No Images Uploaded</h6>
+                                <span class="text-danger i-label" v-if="valid.images">{{ valid.images }}</span>
+                            </div>
+                            <div class="mt-3 mb-5" v-else>
+                                <b-overlay class="preview-carousel" opacity="0.9" :show="reloading">
+                                    <b-carousel v-model="slide" background="#ababab" style="text-shadow: 1px 1px 2px #333;" :fade="images.length > 1" :controls="images.length > 1" :indicators="images.length > 1">
+                                        <b-carousel-slide class="d-flex justify-content-center py-2" v-for="(image, key) in images" :key="key">
+                                            <template #img>
+                                                <img class="d-block rounded" height="240" :src="'/storage/uploads/' + image.file_name" :alt="image.file_name" :id="'slide_' + image.attachment_id" @mouseenter="show_delete_btn = true" @mouseleave="show_delete_btn = false">
+                                                <b-button :class="'rounded-circle delete-btn' + (!show_delete_btn ? ' transparent' : '')" variant="danger" size="sm" title="Remove Image" @click="delete_img(image.attachment_id)" @mouseenter="show_delete_btn = true" @mouseleave="show_delete_btn = false" v-b-tooltip.hover.non-interactive>
+                                                    <i class="fa fa-trash"></i>
+                                                </b-button>
+                                            </template>
+                                        </b-carousel-slide>
+                                    </b-carousel>
+                                </b-overlay>
+                                <span class="text-danger i-label" v-if="valid.images">{{ valid.images }}</span>
+                            </div>
                             <h6 class="text-success font-weight-bold text-black-70 text-black-70">Amenities Information</h6>
                             <div class="font-weight-lighter ml-2 mb-3 text-danger w-100" style="font-size: 9px;">* Required Field</div>
                             <b-form-group label="Amenities Name *">
@@ -80,7 +106,7 @@
                 </b-overlay>
                 <template #modal-footer>
                     <div class="d-flex justify-content-center w-100">
-                        <b-button class="m-2 w-50" size="sm" variant="danger" @click="$bvModal.hide('amenities_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
+                        <b-button class="m-2 w-50" size="sm" variant="danger" @click="discard_changes('amenities_modal')" :disabled="modalIsBusy" block pill>Cancel</b-button>
                         <b-button class="m-2 w-50" size="sm" variant="primary" @click="save_amenities()" :disabled="modalIsBusy" block pill>Done</b-button>
                     </div>
                 </template>
@@ -103,9 +129,13 @@ export default {
 
     data() {
         return {
+            isModified: false,
             isAmenities: true,
             all_amenities: [],
             all_amenities_categories: [],
+            images: [],
+            images_to_delete: [],
+            slide: 0,
             table: {
                 current_page: 1,
                 filter: '',
@@ -136,17 +166,21 @@ export default {
                 per_page: 6
             },
             modal_new: true,
+            show_delete_btn: false,
+            reloading: false,
             amenities_info: {
                 amenities_id: -1,
                 amenities_name: '',
                 category_name: '',
-                description: ''
+                description: '',
+                image_ids: []
             },
             category_name_options: ['Select Amenities Category'],
             valid: {
                 amenities_name: '',
                 category_name: '',
-                description: ''
+                description: '',
+                images: ''
             },
             isBusy: false,
             modalIsBusy: false,
@@ -205,6 +239,8 @@ export default {
         },
 
         is_valid(field) {
+            this.isModified = true
+
             var regex_name = /^.{3,}$/
             var regex_description = /^.{10,}$/
 
@@ -229,6 +265,8 @@ export default {
         },
 
         open_amenities_modal(is_new, amenities = null) {
+            this.isModified = false
+
             if(is_new) {
                 this.modal_new = true
 
@@ -236,10 +274,13 @@ export default {
                 this.amenities_info.amenities_name = ''
                 this.amenities_info.category_name = 'Select Amenities Category'
                 this.amenities_info.description = ''
+                this.amenities_info.image_ids = []
+                this.images = []
 
                 this.valid.amenities_name = ''
                 this.valid.category_name = ''
                 this.valid.description = ''
+                this.valid.images = ''
 
                 this.$bvModal.show('amenities_modal')
             }
@@ -251,6 +292,24 @@ export default {
                 this.amenities_info.category_name = amenities.category_name
                 this.amenities_info.description = amenities.description
 
+                this.images = []
+
+                this.amenities_info.image_ids = JSON.parse(amenities.image_ids)
+
+                this.amenities_info.image_ids.forEach(async (attachment_id) => {
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                })
+
+                this.images_to_delete = []
+
                 this.$bvModal.show('amenities_modal')
             }
         },
@@ -260,7 +319,11 @@ export default {
                             !(this.valid.category_name != '' || this.amenities_info.category_name == 'Select Amenities Category') &&
                             !(this.valid.description != '' || this.amenities_info.description == '')
 
-            if(!all_valid) {
+            var images_valid = this.images.length >= 1
+
+            if(!(all_valid && images_valid)) {
+                this.valid.images = !images_valid ? 'Please upload at least 1 image' : ''
+
                 this.alert.confirm = false
                 this.alert.message = 'Please fill all the required fields!'
 
@@ -273,6 +336,12 @@ export default {
             }
 
             this.modalIsBusy = true
+
+            this.amenities_info.image_ids = []
+
+            this.images.forEach((image) => {
+                this.amenities_info.image_ids.push(image.attachment_id)
+            })
 
             var _amenities_response = await axios.post('/api/amenities/' + (this.modal_new ? 'create' : 'update'),
                     this.amenities_info
@@ -290,6 +359,12 @@ export default {
                         this.amenities_info.amenities_name == ''
                         this.amenities_info.category_name == 'Select Amenities Category'
                         this.amenities_info.description == ''
+                        this.amenities_info.image_ids = []
+
+                        this.valid.amenities_name = ''
+                        this.valid.category_name = ''
+                        this.valid.description = ''
+                        this.valid.images = ''
 
                         this.getAllAmenities()
                     }
@@ -298,8 +373,22 @@ export default {
 
                     return resp.data.message
                 })
-                .then((err) => {
+                .catch((err) => {
                     console.log(err)
+                })
+
+            this.images_to_delete.forEach(async (attachment_id) => {
+                    var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+
+                    this.images.forEach((image) => {
+                        if(image.attachment_id = attachment_id) this.images.pop(image)
+                    })
                 })
         },
 
@@ -308,6 +397,20 @@ export default {
             this.alert.message = 'Delete Amenities record?'
 
             this.alert.okClicked = async () => {
+                this.amenities_info.image_ids.forEach(async (attachment_id) => {
+                        var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+
+                        this.images.forEach((image) => {
+                            if(image.attachment_id = attachment_id) this.images.pop(image)
+                        })
+                    })
+
                 var delete_amenities_response = await axios.post('/api/amenities/delete', {
                         amenities_id: amenities_id
                     })
@@ -326,7 +429,7 @@ export default {
 
                         return resp.data.message
                     })
-                    .then((err) => {
+                    .catch((err) => {
                         console.log(err)
                     })
             }
@@ -342,6 +445,105 @@ export default {
             this.isAmenities = true
             this.getAllAmenities()
             this.getAllAmenitiesCategory()
+        },
+
+        onFileChange(e) {
+            var selectedFiles = e.target.files
+
+            this.isModified = true
+            this.reloading = true
+
+            setTimeout(async () => {
+                for (let i = 0; i < selectedFiles.length; i++) {
+                    var f_data = new FormData()
+
+                    f_data.append('image', selectedFiles[i])
+
+                    var upload_img_response = await axios.post('/api/attachments/create', f_data)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + upload_img_response)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+
+                this.$refs.add_img.files = null
+
+                this.reloading = false
+            }, 800);
+        },
+
+        delete_img(attachment_id) {
+            this.isModified = true
+            this.reloading = true
+
+            setTimeout(async () => {
+                if(this.modal_new) {
+                    var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                }
+                else {
+                    this.images_to_delete.push(attachment_id)
+                    this.amenities_info.image_ids.pop(attachment_id)
+                }
+
+                this.images.forEach((image, index) => {
+                    if(image.attachment_id = attachment_id) this.images.pop(this.images[index])
+                })
+
+                this.images = []
+
+                this.amenities_info.image_ids.forEach(async (attachment_id) => {
+                    var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + attachment_id)
+                        .then((resp) => {
+                            this.images.push(resp.data)
+
+                            return resp.data
+                        })
+                        .catch((err) => {
+                            console.log(err)
+                        })
+                })
+
+                this.reloading = false
+            }, 800);
+        },
+
+        discard_changes(modal_id){
+            if(this.isModified){
+                this.alert.confirm = true
+                this.alert.message = 'Discard Changes?'
+
+                this.alert.okClicked = () => {
+                    this.$bvModal.hide(modal_id)
+                    this.$bvModal.hide('amenities_alert')
+                }
+
+                this.alert.cancelClicked = () => {
+                    this.$bvModal.hide('amenities_alert')
+                }
+
+                this.$bvModal.show('amenities_alert')
+            }
+            else {
+                this.$bvModal.hide(modal_id)
+            }
         }
     },
 
@@ -364,5 +566,18 @@ export default {
 
     .separator-lightgray {
         border-bottom: solid 1px lightgray;
+    }
+
+    .preview-carousel {
+        height: 256px;
+    }
+
+    .delete-btn {
+        position: absolute;
+        bottom: 40px;
+    }
+
+    .transparent {
+        opacity: 30%;
     }
 </style>
