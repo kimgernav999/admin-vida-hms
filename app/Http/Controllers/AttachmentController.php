@@ -9,11 +9,16 @@ class AttachmentController extends Controller
 {
     public function create(Request $request) {
         $destinationPath = 'storage/uploads/';
-
         $file = $request->image;
         $fileext = $file->getClientOriginalExtension();
-        $filename = explode('/', tempnam($destinationPath, 'attachment_'))[9];
-        unlink($destinationPath . $filename);
+        $filename = '';
+        $file_exist = false;
+
+        do {
+            $filename = 'uploads_' . AttachmentController::generateRandomString();
+            $file_exist = file_exists($destinationPath . $filename);
+        } while ($file_exist);
+
         $file->move($destinationPath, $filename . '.' . $fileext);
 
         $attachment = Attachment::create([
@@ -36,5 +41,15 @@ class AttachmentController extends Controller
         $attachment = Attachment::where('attachment_id', $request->attachment_id)->first();
 
         return $attachment ? $attachment : -1;
+    }
+
+    function generateRandomString($length = 10) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 }
