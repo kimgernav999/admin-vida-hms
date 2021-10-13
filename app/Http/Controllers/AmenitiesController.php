@@ -15,6 +15,7 @@ class AmenitiesController extends Controller
             'amenities_name' => $request->amenities_name,
             'category_id' => $category->category_id,
             'description' => $request->description,
+            'features' => json_encode($request->features),
             'image_ids' => json_encode($request->image_ids)
         ]);
 
@@ -32,6 +33,7 @@ class AmenitiesController extends Controller
         $amenities->amenities_name = $request->amenities_name;
         $amenities->category_id = $category->category_id;
         $amenities->description = $request->description;
+        $amenities->features = json_encode($request->features);
         $amenities->image_ids = json_encode($request->image_ids);
         $message = $amenities->save() ? 'Amenities record updated!' : 'Amenities record update failed!';
         return response(

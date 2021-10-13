@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex justify-content-center p-5">
-        <div class="w-100" v-if="isAmenities">
-            <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
+        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100" v-if="isAmenities">
+            <div>
                 <h3 class="mb-4">Amenities</h3>
                 <div class="border py-3 rounded-sm">
                     <div class="d-flex mb-3">
@@ -101,6 +101,24 @@
                                 </div>
                                 <span class="text-danger i-label" v-if="valid.description">{{ valid.description }}</span>
                             </b-form-group>
+                            <b-form-group label="Amenities Features *">
+                                <b-form-tags v-model="amenities_info.features" tag-variant="primary" no-outer-focus class="mb-2" no-add-on-enter>
+                                    <template v-slot="{ tags, inputAttrs, inputHandlers, tagVariant, addTag, removeTag }">
+                                        <b-input-group class="mb-2">
+                                            <b-form-input class="form-control r-left"  v-bind="inputAttrs" v-on="inputHandlers" placeholder="Enter to Add Amenities"></b-form-input>
+                                            <b-input-group-append>
+                                                <b-button class="pr-3 r-right" @click="addTag" variant="primary" >Add</b-button>
+                                            </b-input-group-append>
+                                        </b-input-group>
+                                        <div class="d-block text-center" style="font-size: 1rem;" v-if="amenities_info.features.length == 0">
+                                            <span style="font-size: 0.8rem;">No Features</span>
+                                        </div>
+                                        <div class="d-block" style="font-size: 1rem;" v-else>
+                                            <b-form-tag v-for="tag in tags" @remove="removeTag(tag)" :key="tag" :title="tag" :variant="tagVariant" class="mb-1 px-2 w-100" pill>{{ tag }}</b-form-tag>
+                                        </div>
+                                    </template>
+                                </b-form-tags>
+                            </b-form-group>
                         </b-form>
                     </b-container>
                 </b-overlay>
@@ -135,6 +153,7 @@ export default {
             all_amenities_categories: [],
             images: [],
             images_to_delete: [],
+            images_to_delete_upon_discard: [],
             slide: 0,
             table: {
                 current_page: 1,
@@ -173,6 +192,7 @@ export default {
                 amenities_name: '',
                 category_name: '',
                 description: '',
+                features: [],
                 image_ids: []
             },
             category_name_options: ['Select Amenities Category'],
@@ -180,6 +200,7 @@ export default {
                 amenities_name: '',
                 category_name: '',
                 description: '',
+                features: [],
                 images: ''
             },
             isBusy: false,
@@ -274,6 +295,7 @@ export default {
                 this.amenities_info.amenities_name = ''
                 this.amenities_info.category_name = 'Select Amenities Category'
                 this.amenities_info.description = ''
+                this.amenities_info.features = []
                 this.amenities_info.image_ids = []
                 this.images = []
 
@@ -291,6 +313,7 @@ export default {
                 this.amenities_info.amenities_name = amenities.amenities_name
                 this.amenities_info.category_name = amenities.category_name
                 this.amenities_info.description = amenities.description
+                this.amenities_info.features = JSON.parse(amenities.features)
 
                 this.images = []
 
@@ -390,6 +413,9 @@ export default {
                         if(image.attachment_id = attachment_id) this.images.pop(image)
                     })
                 })
+
+
+            this.images_to_delete_upon_discard = []
         },
 
         delete_amenities(amenities_id) {
@@ -437,7 +463,6 @@ export default {
             this.alert.cancelClicked = () => {
                 this.$bvModal.hide('amenities_alert')
             }
-
             this.$bvModal.show('amenities_alert')
         },
 
@@ -448,6 +473,7 @@ export default {
         },
 
         onFileChange(e) {
+            this.valid.images = ''
             var selectedFiles = e.target.files
 
             this.isModified = true
@@ -470,7 +496,7 @@ export default {
                     var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + upload_img_response)
                         .then((resp) => {
                             this.images.push(resp.data)
-
+                            this.images_to_delete_upon_discard.push(resp.data.attachment_id)
                             return resp.data
                         })
                         .catch((err) => {
@@ -531,6 +557,18 @@ export default {
                 this.alert.message = 'Discard Changes?'
 
                 this.alert.okClicked = () => {
+                    this.images_to_delete_upon_discard.forEach(async (attachment_id) => {
+                        var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+                    })
+
+                    this.images_to_delete_upon_discard = []
+
                     this.$bvModal.hide(modal_id)
                     this.$bvModal.hide('amenities_alert')
                 }

@@ -128,6 +128,7 @@ export default {
             all_offers: [],
             images: [],
             images_to_delete: [],
+            images_to_delete_upon_discard: [],
             slide: 0,
             table: {
                 current_page: 1,
@@ -360,6 +361,8 @@ export default {
                         if(image.attachment_id = attachment_id) this.images.pop(image)
                     })
                 })
+
+            this.images_to_delete_upon_discard = []
         },
 
         delete_offer(offer_id) {
@@ -417,6 +420,7 @@ export default {
         },
 
         onFileChange(e) {
+            this.valid.images = ''
             var selectedFiles = e.target.files
 
             this.isModified = true
@@ -439,6 +443,7 @@ export default {
                     var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + upload_img_response)
                         .then((resp) => {
                             this.images.push(resp.data)
+                            this.images_to_delete_upon_discard.push(resp.data.attachment_id)
 
                             return resp.data
                         })
@@ -500,6 +505,18 @@ export default {
                 this.alert.message = 'Discard Changes?'
 
                 this.alert.okClicked = () => {
+                    this.images_to_delete_upon_discard.forEach(async (attachment_id) => {
+                        var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+                    })
+
+                    this.images_to_delete_upon_discard = []
+
                     this.$bvModal.hide(modal_id)
                     this.$bvModal.hide('offer_alert')
                 }

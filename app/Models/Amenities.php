@@ -17,6 +17,7 @@ class Amenities extends Model
         'amenities_name',
         'category_id',
         'description',
+        'features',
         'image_ids'
     ];
 

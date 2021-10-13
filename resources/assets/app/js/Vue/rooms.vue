@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex justify-content-center p-5">
-        <div class="w-100" v-if="isRoom">
-            <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100">
+        <div class="align-self-center bg-white border shadow-sm rounded-sm p-5 w-100" v-if="isRoom">
+            <div>
                 <h3 class="mb-4">Rooms & Suites</h3>
                 <div class="border py-3 rounded-sm">
                     <div class="d-flex mb-3">
@@ -191,6 +191,7 @@ export default {
             all_amenities: [],
             images: [],
             images_to_delete: [],
+            images_to_delete_upon_discard: [],
             slide: 0,
             table: {
                 current_page: 1,
@@ -359,7 +360,7 @@ export default {
                     break
 
                 case 'room_type_name':
-                    this.valid.room_type_name = this.room_info.room_type_name == 'Select Room Type' ? 'Field is required' : ''
+                    this.valid.room_type_name = (this.room_info.room_type_name == 'Select Room Type') ? 'Field is required' : ''
                     break
 
                 case 'description':
@@ -556,6 +557,8 @@ export default {
                         if(image.attachment_id = attachment_id) this.images.pop(image)
                     })
                 })
+
+            this.images_to_delete_upon_discard = []
         },
 
         delete_room(room_id) {
@@ -614,6 +617,7 @@ export default {
         },
 
         onFileChange(e) {
+            this.valid.images = ''
             var selectedFiles = e.target.files
 
             this.isModified = true
@@ -636,6 +640,7 @@ export default {
                     var attach_details_response = await axios.get('/api/attachments/viewDetails?attachment_id=' + upload_img_response)
                         .then((resp) => {
                             this.images.push(resp.data)
+                            this.images_to_delete_upon_discard.push(resp.data.attachment_id)
 
                             return resp.data
                         })
@@ -697,6 +702,18 @@ export default {
                 this.alert.message = 'Discard Changes?'
 
                 this.alert.okClicked = () => {
+                    this.images_to_delete_upon_discard.forEach(async (attachment_id) => {
+                        var attach_delete_response = await axios.get('/api/attachments/delete?attachment_id=' + attachment_id)
+                            .then((resp) => {
+                                return resp.data
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                            })
+                    })
+
+                    this.images_to_delete_upon_discard = []
+
                     this.$bvModal.hide(modal_id)
                     this.$bvModal.hide('room_alert')
                 }
