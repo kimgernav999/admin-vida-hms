@@ -284,6 +284,7 @@ export default {
 
                 this.$bvModal.hide('roomtypes_modal')
                 this.$bvModal.hide('roomtypes_alert')
+                this.getAllAmenitiesCategory()
             }
 
             this.alert.cancelClicked = () => {

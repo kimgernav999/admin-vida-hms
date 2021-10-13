@@ -604,6 +604,9 @@ export default {
 
                     this.$bvModal.hide('room_modal')
                     this.$bvModal.hide('room_alert')
+                    this.getAllRoom()
+                    this.getAllRoomType()
+                    this.getAllAmenities()
             }
 
             this.alert.cancelClicked = () => {

@@ -285,6 +285,7 @@ export default {
 
                 this.$bvModal.hide('amenities_category_modal')
                 this.$bvModal.hide('amenities_category_alert')
+                this.getAllAmenitiesCategory()
             }
 
             this.alert.cancelClicked = () => {

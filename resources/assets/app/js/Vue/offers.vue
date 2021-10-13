@@ -408,6 +408,7 @@ export default {
 
                 this.$bvModal.hide('offer_modal')
                 this.$bvModal.hide('offer_alert')
+                this.getAllOffer()
             }
 
             this.alert.cancelClicked = () => {
