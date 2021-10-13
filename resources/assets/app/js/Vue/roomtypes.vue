@@ -281,6 +281,9 @@ export default {
                     .catch((err) => {
                         console.log(err)
                     })
+
+                this.$bvModal.hide('roomtypes_modal')
+                this.$bvModal.hide('roomtypes_alert')
             }
 
             this.alert.cancelClicked = () => {

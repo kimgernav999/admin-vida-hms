@@ -601,6 +601,9 @@ export default {
                     .catch((err) => {
                         console.log(err)
                     })
+
+                    this.$bvModal.hide('room_modal')
+                    this.$bvModal.hide('room_alert')
             }
 
             this.alert.cancelClicked = () => {

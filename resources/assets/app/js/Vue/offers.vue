@@ -405,6 +405,9 @@ export default {
                     .catch((err) => {
                         console.log(err)
                     })
+
+                this.$bvModal.hide('offer_modal')
+                this.$bvModal.hide('offer_alert')
             }
 
             this.alert.cancelClicked = () => {

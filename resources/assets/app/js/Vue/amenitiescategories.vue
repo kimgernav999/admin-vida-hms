@@ -281,6 +281,10 @@ export default {
                     .catch((err) => {
                         console.log(err)
                     })
+
+
+                this.$bvModal.hide('amenities_category_modal')
+                this.$bvModal.hide('amenities_category_alert')
             }
 
             this.alert.cancelClicked = () => {

@@ -458,11 +458,15 @@ export default {
                     .catch((err) => {
                         console.log(err)
                     })
+
+                this.$bvModal.hide('amenities_modal')
+                this.$bvModal.hide('amenities_alert')
             }
 
             this.alert.cancelClicked = () => {
                 this.$bvModal.hide('amenities_alert')
             }
+
             this.$bvModal.show('amenities_alert')
         },
 
