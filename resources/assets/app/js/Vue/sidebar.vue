@@ -7,13 +7,13 @@
             <i class="fa fa-dashboard mr-1"></i>
             Dashboard
         </router-link>
-        <router-link :class="'sb-items' + (location == '/schedules' ? ' active' : '')" :to="{ name: 'schedules' }">
-            <i class="fa fa-calendar mr-1"></i>
-            Bookings & Reservations
-        </router-link>
-        <router-link :class="'sb-items' + (location == '/billings' ? ' active' : '')" :to="{ name: 'billings' }">
+        <router-link :class="'sb-items' + (location == '/housekeeping' ? ' active' : '')" :to="{ name: 'housekeeping' }">
             <i class="fa fa-money mr-1"></i>
-            Billings
+            Housekeeping
+        </router-link>
+        <router-link :class="'sb-items' + (location == '/history' ? ' active' : '')" :to="{ name: 'history' }">
+            <i class="fa fa-money mr-1"></i>
+            Transaction History
         </router-link>
         <router-link :class="'sb-items' + (location == '/inventory' ? ' active' : '')" :to="{ name: 'inventory' }">
             <i class="fa fa-hotel mr-1"></i>

@@ -2,8 +2,8 @@ import Topbar from './Vue/topbar.vue'
 import PageNotFound from './Vue/pagenotfound.vue'
 
 import Dashboard from './Vue/dashboard.vue'
-import Schedules from './Vue/schedules.vue'
-import Billings from './Vue/billings.vue'
+import Housekeeping from './Vue/housekeeping.vue'
+import History from './Vue/history.vue'
 import Inventory from './Vue/inventory.vue'
 import Rooms from './Vue/rooms.vue'
 import Amenities from './Vue/amenities.vue'
@@ -26,8 +26,8 @@ const router = new VueRouter({
         { path: '/', name: 'signin', component: Signin },
         { path: '/signup', name: 'signup', component: Signup },
         { path: '/dashboard', name: 'dashboard', component: Dashboard },
-        { path: '/schedules', name: 'schedules', component: Schedules },
-        { path: '/billings', name: 'billings', component: Billings },
+        { path: '/housekeeping', name: 'schedules', component: Housekeeping },
+        { path: '/history', name: 'history', component: History },
         { path: '/inventory', name: 'inventory', component: Inventory },
         { path: '/amenities', name: 'amenities', component: Amenities },
         { path: '/offers', name: 'offers', component: Offers },

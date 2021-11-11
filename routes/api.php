@@ -11,6 +11,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\OffersController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,4 +84,11 @@ Route::prefix('attachments')->group(function () {
     Route::post('create', [AttachmentController::class, 'create']);
     Route::get('delete', [AttachmentController::class, 'delete']);
     Route::get('viewDetails', [AttachmentController::class, 'viewDetails']);
+});
+
+Route::prefix('booking')->group(function () {
+    Route::post('new', [BookingController::class, 'new']);
+    Route::post('payBooking', [BookingController::class, 'payBooking']);
+    Route::post('cancelBooking', [BookingController::class, 'cancelBooking']);
+    Route::get('allBookings', [BookingController::class, 'allBookings']);
 });

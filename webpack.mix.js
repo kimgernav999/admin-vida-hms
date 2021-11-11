@@ -11,7 +11,7 @@ const mix = require('laravel-mix');
  |
  */
 
-// mix.browserSync('http://localhost:8080');
+mix.browserSync('http://localhost:8080');
 
 mix .js('resources/assets/app/js/app.js', 'public/assets/app/js').vue()
     .js('resources/assets/app/js/vendor.js', 'public/assets/app/js')

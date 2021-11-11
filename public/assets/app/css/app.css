@@ -76,6 +76,11 @@ th:last-child {
     width: 100%;
 }
 
+th:last-child {
+    text-align: center;
+    min-width: 250px;
+}
+
 .result_table .table-responsive {
     margin: 0;
     border: 0 !important;
